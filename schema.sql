@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS devices (
   losses      INTEGER DEFAULT 0,
   closed_pl   REAL    DEFAULT 0,
   stats_at    INTEGER,
+  stats_full  TEXT,                                 -- JSON portofolio lengkap ala MQL5 Signal
   UNIQUE(key_id, account)
 );
 

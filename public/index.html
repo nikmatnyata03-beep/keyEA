@@ -114,6 +114,45 @@ tbody tr:hover{background:rgba(245,158,11,.04)}
 .scroll::-webkit-scrollbar-thumb{background:#3f3f46;border-radius:8px}
 .warnbar{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.4);color:#fcd34d;border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:16px}
 
+/* ---------- portfolio ala MQL5 signal ---------- */
+.pf-wrap{width:100%;max-width:1080px;max-height:92vh;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:var(--radius)}
+.pf-top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:15px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.pf-name{font-weight:800;font-size:16px}
+.pf-sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+.pf-body{padding:18px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+.pf-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:10px}
+.pf-kpi{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.pf-kpi .v{font-size:19px;font-weight:800;line-height:1.2;white-space:nowrap}
+.pf-kpi .k{font-size:10.5px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.6px}
+.pf-chips{display:flex;flex-wrap:wrap;gap:8px}
+.pf-chip{font-size:12px;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:5px 12px;color:var(--muted)}
+.pf-chip b{color:var(--text)}
+.pf-card{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:16px}
+.pf-card h3{font-size:12px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin-bottom:12px}
+.pf-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:820px){.pf-cols{grid-template-columns:1fr}}
+.pf-kv{display:grid;grid-template-columns:1fr auto;gap:7px 14px;font-size:13px}
+.pf-kv .lab{color:var(--muted)}
+.pf-kv .val{text-align:right;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pf-bar{height:12px;border-radius:999px;overflow:hidden;background:rgba(244,63,94,.3);display:flex;margin:6px 0 3px}
+.pf-bar .g{background:#10b981;height:100%}
+.pf-bar .r{background:#f43f5e;height:100%}
+.pf-bar .b{background:#60a5fa;height:100%}
+.pf-bar .o{background:#fb923c;height:100%}
+.pf-bar .n{background:#a1a1aa;height:100%}
+.pf-mon{width:100%;border-collapse:collapse;font-size:12px}
+.pf-mon th,.pf-mon td{padding:6px 7px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pf-mon th{color:var(--dim);font-weight:600;text-transform:none;letter-spacing:0;background:none}
+.pf-mon td.y{font-weight:700;text-align:left;color:var(--text)}
+.pf-mon td.pos{color:#4ade80}.pf-mon td.neg{color:#f87171}
+.pf-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:640px}
+.pf-table th{font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+.pf-table td{padding:8px 10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.pf-table tr:last-child td{border-bottom:none}
+.pf-tbuy{color:#4ade80;font-weight:700}
+.pf-tsell{color:#f87171;font-weight:700}
+canvas#pfChart{width:100%;height:260px;display:block}
+
 /* ---------- toast ---------- */
 #toasts{position:fixed;right:18px;bottom:18px;z-index:90;display:flex;flex-direction:column;gap:8px}
 .toast{background:var(--card2);border:1px solid var(--line);border-left:3px solid var(--emerald);border-radius:10px;padding:10px 16px;font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.5);animation:tin .18s ease}
@@ -235,6 +274,23 @@ tbody tr:hover{background:rgba(245,158,11,.04)}
   <div class="modal">
     <div class="mhead"><b id="logTitle">Riwayat</b><button class="btn sm ghost" id="logClose">✕</button></div>
     <div class="mbody feed scroll" id="logBody"></div>
+  </div>
+</div>
+
+<!-- ================= MODAL PORTFOLIO (ala MQL5 Signal) ================= -->
+<div class="modal-bg hidden" id="pfModal">
+  <div class="pf-wrap">
+    <div class="pf-top">
+      <div>
+        <div class="pf-name">&#9819; Quantum Queen X 4.3 <span style="color:var(--dim);font-weight:400">&middot; MT5 Portfolio</span></div>
+        <div class="pf-sub" id="pfSub">&mdash;</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="mut" id="pfAge" style="font-size:11.5px"></span>
+        <button class="btn sm ghost" id="pfClose">&#10005;</button>
+      </div>
+    </div>
+    <div class="pf-body scroll" id="pfBody"><div class="empty">Memuat&hellip;</div></div>
   </div>
 </div>
 
@@ -374,7 +430,8 @@ function renderDevices() {
     const hasStat = d.stats_at || d.balance || d.wins || d.losses;
     return `<tr>
     <td><code class="mono" onclick="copyText('${k.key}')" style="cursor:pointer" title="Klik untuk salin">${k.key}</code></td>
-    <td><b class="mono">${esc(d.account)}</b><br><span class="mut">${esc(d.broker || '—')}</span></td>
+    <td><b class="mono">${esc(d.account)}</b><br><span class="mut">${esc(d.broker || '—')}</span>
+        <button class="btn sm" style="margin-top:5px" onclick="showPortfolio(${k.id},'${esc(d.account)}')" title="Lihat portofolio ala MQL5 Signal">&#128200; Portofolio</button></td>
     <td class="mono">${hasStat ? money(d.balance) : '<span class="mut">—</span>'}</td>
     <td class="mono">${hasStat ? esc(money(d.equity)) + '<br><span class="mut">float </span><span style="color:' + col(d.float_pl) + '">' + signed(d.float_pl) + '</span>' : '<span class="mut">—</span>'}</td>
     <td>${hasStat ? '<span style="color:#4ade80">' + (d.wins || 0) + 'W</span> <span style="color:#f87171">' + (d.losses || 0) + 'L</span><br><span class="mut">winrate ' + wr + '</span>' : '<span class="mut">—</span>'}</td>
@@ -427,6 +484,241 @@ async function loadFeed() {
       <span class="mut" style="white-space:nowrap">${relTime(l.created_at)}</span>
     </div>`).join('');
 }
+
+// ---------------- portfolio ala MQL5 signal ----------------
+function pfNum(v, d) { return Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: d === undefined ? 2 : d, maximumFractionDigits: d === undefined ? 2 : d }); }
+function pfMoney(v, cur) { return pfNum(v) + (cur ? ' ' + cur : ''); }
+function pfSigned(v, cur) { return (Number(v) > 0 ? '+' : '') + pfMoney(v, cur); }
+function pfPct(v) { return (Number(v) > 0 ? '+' : '') + Number(v || 0).toFixed(2) + '%'; }
+function pfCol(v) { return Number(v) > 0 ? '#4ade80' : (Number(v) < 0 ? '#f87171' : 'inherit'); }
+function pfDur(sec) {
+  sec = Number(sec || 0);
+  if (sec < 60) return sec.toFixed(0) + ' sec';
+  if (sec < 3600) return Math.floor(sec / 60) + ' min';
+  if (sec < 86400) { const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60); return h + 'h' + (m ? ' ' + m + 'm' : ''); }
+  const d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600); return d + 'd' + (h ? ' ' + h + 'h' : '');
+}
+function pfDate(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts * 1000), p = (n) => String(n).padStart(2, '0');
+  return d.getUTCFullYear() + '.' + p(d.getUTCMonth() + 1) + '.' + p(d.getUTCDate()) + ' ' + p(d.getUTCHours()) + ':' + p(d.getUTCMinutes());
+}
+function pfKpi(v, k, color) {
+  return '<div class="pf-kpi"><div class="v"' + (color ? ' style="color:' + color + '"' : '') + '>' + v + '</div><div class="k">' + k + '</div></div>';
+}
+function pfKv(l, v, color) {
+  return '<div class="lab">' + l + '</div><div class="val"' + (color ? ' style="color:' + color + '"' : '') + '>' + v + '</div>';
+}
+function pfBarWin(pct) {
+  const p = Math.max(0, Math.min(100, Number(pct) || 0));
+  return '<div class="pf-bar"><div class="g" style="width:' + p.toFixed(1) + '%"></div><div class="r" style="flex:1"></div></div>' +
+    '<div style="display:flex;justify-content:space-between;font-size:11.5px"><span style="color:#4ade80">Profit ' + p.toFixed(1) + '%</span><span style="color:#f87171">Loss ' + (100 - p).toFixed(1) + '%</span></div>';
+}
+function pfBarLS(pct) {
+  const p = Math.max(0, Math.min(100, Number(pct) || 0));
+  return '<div class="pf-bar"><div class="b" style="width:' + p.toFixed(1) + '%"></div><div class="o" style="flex:1"></div></div>' +
+    '<div style="display:flex;justify-content:space-between;font-size:11.5px"><span style="color:#60a5fa">Long ' + p.toFixed(1) + '%</span><span style="color:#fb923c">Short ' + (100 - p).toFixed(1) + '%</span></div>';
+}
+function pfBarAct(pct) {
+  const p = Math.max(0, Math.min(100, Number(pct) || 0));
+  return '<div class="pf-bar"><div class="n" style="width:' + p.toFixed(1) + '%"></div><div style="flex:1"></div></div>' +
+    '<div style="font-size:11.5px" class="mut">Posisi terbuka ' + p.toFixed(1) + '% dari waktu monitoring</div>';
+}
+function pfMonthly(months, growth) {
+  const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const byYear = {};
+  (months || []).forEach((r) => { (byYear[r[0]] = byYear[r[0]] || [])[r[1] - 1] = r[2]; });
+  const years = Object.keys(byYear).sort();
+  if (!years.length) return '<div class="mut">Belum ada data bulanan (menunggu trade pertama).</div>';
+  let h = '<div style="overflow-x:auto"><table class="pf-mon"><thead><tr><th style="text-align:left">Year</th>' +
+    M.map((m) => '<th>' + m + '</th>').join('') + '<th>Year</th></tr></thead><tbody>';
+  years.forEach((y) => {
+    h += '<tr><td class="y">' + y + '</td>';
+    let comp = 1, has = false;
+    for (let m = 0; m < 12; m++) {
+      const v = byYear[y][m];
+      if (v === undefined || v === null) { h += '<td style="color:#3f3f46">&middot;</td>'; }
+      else { has = true; comp *= (1 + v / 100); h += '<td class="' + (v >= 0 ? 'pos' : 'neg') + '">' + pfPct(v) + '</td>'; }
+    }
+    const yt = (comp - 1) * 100;
+    h += '<td class="' + (yt >= 0 ? 'pos' : 'neg') + '" style="font-weight:700">' + (has ? pfPct(yt) : '&mdash;') + '</td></tr>';
+  });
+  h += '<tr><td class="y">Total</td><td colspan="12"></td><td style="font-weight:800;color:#fbbf24">' + pfPct(growth) + '</td></tr>';
+  h += '</tbody></table></div>';
+  return h;
+}
+function pfSymbols(syms) {
+  if (!syms || !syms.length) return '<div class="mut">Belum ada data simbol.</div>';
+  return syms.map((s) => {
+    const tot = (s[2] + s[3]) || 1;
+    const buyP = s[3] / tot * 100;
+    return '<div style="margin-bottom:12px">' +
+      '<div style="display:flex;justify-content:space-between;font-size:12.5px"><b class="mono">' + esc(s[0]) + '</b>' +
+      '<span class="mut">' + s[1] + ' deals &middot; <span style="color:' + pfCol(s[4]) + '">' + pfSigned(s[4]) + '</span></span></div>' +
+      '<div class="pf-bar" style="height:8px"><div class="g" style="width:' + buyP.toFixed(1) + '%"></div><div class="r" style="flex:1"></div></div>' +
+      '<div class="mut" style="font-size:11px">buy ' + buyP.toFixed(1) + '% &middot; sell ' + (100 - buyP).toFixed(1) + '%</div></div>';
+  }).join('');
+}
+function drawGrowth(cv, curve) {
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth || 900, H = 260;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+  const padL = 10, padR = 74, padT = 14, padB = 26;
+  const iw = W - padL - padR, ih = H - padT - padB;
+  if (!curve || curve.length < 2) {
+    ctx.fillStyle = '#71717a'; ctx.font = '13px sans-serif';
+    ctx.fillText('Kurva balance belum tersedia — data terkirim setelah EA check-in berikutnya.', padL + 8, padT + 40);
+    return;
+  }
+  const xs = curve.map((p) => p[0]), ys = curve.map((p) => p[1]);
+  const x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
+  let y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+  if (y1 - y0 < 1e-9) y1 = y0 + 1;
+  const yPad = (y1 - y0) * 0.07; y0 -= yPad; y1 += yPad;
+  const X = (t) => padL + (x1 === x0 ? 0 : (t - x0) / (x1 - x0)) * iw;
+  const Y = (v) => padT + (1 - (v - y0) / (y1 - y0)) * ih;
+  ctx.strokeStyle = 'rgba(255,255,255,.07)'; ctx.fillStyle = '#71717a';
+  ctx.font = '11px ui-monospace,Menlo,monospace'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const v = y0 + (y1 - y0) * i / 4, yy = Y(v);
+    ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(padL + iw, yy); ctx.stroke();
+    ctx.fillText(v.toLocaleString('en-US', { maximumFractionDigits: v >= 1000 ? 0 : 2 }), padL + iw + 8, yy + 4);
+  }
+  for (let i = 0; i <= 4; i++) {
+    const t = x0 + (x1 - x0) * i / 4, xx = X(t);
+    const d = new Date(t * 1000);
+    const lbl = d.getUTCDate() + '/' + (d.getUTCMonth() + 1) + ' ' + d.getUTCFullYear().toString().slice(2);
+    ctx.fillText(lbl, Math.min(xx, padL + iw - 52), H - 8);
+  }
+  const grad = ctx.createLinearGradient(0, padT, 0, padT + ih);
+  grad.addColorStop(0, 'rgba(16,185,129,.34)'); grad.addColorStop(1, 'rgba(16,185,129,0)');
+  ctx.beginPath(); ctx.moveTo(X(xs[0]), Y(ys[0]));
+  for (let i = 1; i < xs.length; i++) ctx.lineTo(X(xs[i]), Y(ys[i]));
+  ctx.lineTo(X(xs[xs.length - 1]), padT + ih); ctx.lineTo(X(xs[0]), padT + ih); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(X(xs[0]), Y(ys[0]));
+  for (let i = 1; i < xs.length; i++) ctx.lineTo(X(xs[i]), Y(ys[i]));
+  ctx.strokeStyle = '#10b981'; ctx.lineWidth = 2; ctx.stroke();
+  const lx = X(xs[xs.length - 1]), ly = Y(ys[ys.length - 1]);
+  ctx.beginPath(); ctx.arc(lx, ly, 4, 0, Math.PI * 2); ctx.fillStyle = '#fbbf24'; ctx.fill();
+}
+function showPortfolio(keyId, account) {
+  const k = KEYS_CACHE.find((x) => x.id === keyId);
+  if (!k) { toast('Device tidak ditemukan', true); return; }
+  const d = (k.devices || []).find((x) => x.account === account);
+  if (!d) { toast('Device tidak ditemukan', true); return; }
+  const s = d.stats;
+  $('pfSub').textContent = 'Akun ' + d.account + (d.broker ? ' · ' + d.broker : '') +
+    (s && s.server ? ' · ' + s.server : '') + (s && s.leverage ? ' · Leverage 1:' + s.leverage : '') +
+    (s && s.currency ? ' · ' + s.currency : '');
+  $('pfAge').textContent = d.stats_at ? 'Data terakhir: ' + relTime(d.stats_at) : 'Belum ada data EA';
+  const B = $('pfBody');
+  if (!s || !s.ts) {
+    B.innerHTML = '<div class="empty" style="padding:50px 20px">Portofolio belum tersedia untuk device ini.<br><span class="mut">Statistik lengkap (kurva, W/L, drawdown, histori) terkirim otomatis oleh EA versi terbaru pada check-in berikutnya.</span></div>';
+    $('pfModal').classList.remove('hidden');
+    return;
+  }
+  const cur = s.currency || 'USD';
+  let h = '';
+  // ---- KPI utama (ala header signal MQL5) ----
+  h += '<div class="pf-kpis">' +
+    pfKpi('<span style="font-size:24px;font-weight:800;color:' + pfCol(s.growth_pct) + '">' + pfPct(s.growth_pct) + '</span>', 'Growth') +
+    pfKpi(pfSigned(s.profit_closed, cur), 'Profit', pfCol(s.profit_closed)) +
+    pfKpi(pfMoney(s.equity, cur), 'Equity') +
+    pfKpi(pfMoney(s.balance, cur), 'Balance') +
+    pfKpi(pfMoney(s.float_pl, cur), 'Floating P/L', pfCol(s.float_pl)) +
+    pfKpi(pfMoney(s.initial_deposit, cur), 'Initial Deposit') +
+    pfKpi(pfMoney(s.deposits, cur), 'Deposits') +
+    pfKpi(pfMoney(s.withdrawals, cur), 'Withdrawals') +
+    '</div>';
+  // ---- chips info ----
+  h += '<div class="pf-chips">' +
+    '<span class="pf-chip">Trading Days <b>' + (s.trading_days || 0) + '</b> (' + Number(s.td_pct || 0).toFixed(1) + '%)</span>' +
+    '<span class="pf-chip">Weeks <b>' + Math.floor(s.weeks || 0) + '</b></span>' +
+    '<span class="pf-chip">Trades/week <b>' + Number(s.trades_per_week || 0).toFixed(1) + '</b></span>' +
+    '<span class="pf-chip">Avg holding <b>' + pfDur(s.avg_hold) + '</b></span>' +
+    '<span class="pf-chip">Latest trade <b>' + (s.last_trade ? relTime(s.last_trade) : '—') + '</b></span>' +
+    '<span class="pf-chip">Started <b>' + pfDate(s.first_op || s.first_trade) + '</b></span>' +
+    '<span class="pf-chip">Algo trading <b>100%</b></span>' +
+    '<span class="pf-chip">Trades <b>' + (s.trades || 0) + '</b></span>' +
+    '</div>';
+  // ---- grafik growth ----
+  h += '<div class="pf-card"><h3>Growth &middot; Balance ' + esc(cur) + '</h3><canvas id="pfChart"></canvas></div>';
+  // ---- grid bulanan ----
+  h += '<div class="pf-card"><h3>Monthly Return (%)</h3>' + pfMonthly(s.months, s.growth_pct) + '</div>';
+  // ---- statistics + risks ----
+  h += '<div class="pf-cols">';
+  h += '<div class="pf-card"><h3>Statistics</h3><div class="pf-kv">' +
+    pfKv('Trades', s.trades || 0) +
+    pfKv('Profit Trades', (s.wins || 0) + ' (' + Number(s.win_pct || 0).toFixed(2) + '%)', '#4ade80') +
+    pfKv('Loss Trades', (s.losses || 0) + ' (' + Number(s.loss_pct || 0).toFixed(2) + '%)', '#f87171') +
+    pfKv('Best trade', pfSigned(s.best, cur), pfCol(s.best)) +
+    pfKv('Worst trade', pfSigned(s.worst, cur), pfCol(s.worst)) +
+    pfKv('Average Profit Trade', pfSigned(s.avg_profit, cur), pfCol(s.avg_profit)) +
+    pfKv('Average Loss Trade', pfSigned(s.avg_loss, cur), pfCol(s.avg_loss)) +
+    pfKv('Gross Profit', pfSigned(s.gross_profit, cur), '#4ade80') +
+    pfKv('Gross Loss', pfSigned(s.gross_loss, cur), '#f87171') +
+    pfKv('Maximum consecutive wins', (s.max_cw || 0) + ' (' + pfMoney(s.max_cw_usd, cur) + ')') +
+    pfKv('Maximum consecutive losses', (s.max_cl || 0) + ' (' + pfMoney(s.max_cl_usd, cur) + ')') +
+    pfKv('Maximal consecutive profit', pfMoney(s.max_cp_usd, cur) + ' (' + (s.max_cp_n || 0) + ')', '#4ade80') +
+    pfKv('Maximal consecutive loss', pfMoney(s.max_clmoney_usd, cur) + ' (' + (s.max_clmoney_n || 0) + ')', '#f87171') +
+    pfKv('Profit Factor', Number(s.pf || 0).toFixed(2)) +
+    pfKv('Expected Payoff', pfSigned(s.payoff, cur)) +
+    pfKv('Sharpe Ratio', Number(s.sharpe || 0).toFixed(2)) +
+    pfKv('Recovery Factor', Number(s.recovery || 0).toFixed(2)) +
+    pfKv('Long Trades', (s.longs || 0) + ' (' + Number(s.long_pct || 0).toFixed(2) + '%)') +
+    pfKv('Short Trades', (s.shorts || 0) + ' (' + Number(s.short_pct || 0).toFixed(2) + '%)') +
+    '</div></div>';
+  h += '<div class="pf-card"><h3>Risks</h3><div class="pf-kv">' +
+    pfKv('Balance DD — Absolute', pfMoney(s.bdd_abs, cur)) +
+    pfKv('Balance DD — Maximal', pfMoney(s.bdd_max_usd, cur) + ' (' + Number(s.bdd_max_pct || 0).toFixed(2) + '%)', '#fdba74') +
+    pfKv('Relative DD — By Balance', Number(s.bdd_rel_pct || 0).toFixed(2) + '% (' + pfMoney(s.bdd_rel_usd, cur) + ')', '#fdba74') +
+    pfKv('Relative DD — By Equity', Number(s.edd_rel_pct || 0).toFixed(2) + '% (' + pfMoney(s.edd_rel_usd, cur) + ')', '#fdba74') +
+    pfKv('Equity DD — Maximal', pfMoney(s.edd_max_usd, cur) + ' (' + Number(s.edd_max_pct || 0).toFixed(2) + '%)', '#fdba74') +
+    pfKv('Max deposit load (margin)', Number(s.margin_load || 0).toFixed(1) + '%') +
+    '</div><div style="margin-top:14px">' + pfBarWin(s.win_pct) + '</div>' +
+    '<div style="margin-top:12px">' + pfBarLS(s.long_pct) + '</div>' +
+    '<div style="margin-top:12px">' + pfBarAct(s.activity_pct) + '</div>' +
+    '<div class="pf-kv" style="margin-top:14px">' +
+    pfKv('Monthly growth (avg)', pfPct(s.monthly_growth), pfCol(s.monthly_growth)) +
+    pfKv('Annual Forecast', pfPct(s.annual_forecast), pfCol(s.annual_forecast)) +
+    '</div></div>';
+  h += '</div>';
+  // ---- distribusi simbol ----
+  h += '<div class="pf-card"><h3>Distribution &middot; Symbol</h3>' + pfSymbols(s.symbols) + '</div>';
+  // ---- histori trade ----
+  let hist = '';
+  if (s.history && s.history.length) {
+    const rows = s.history.slice().sort((a, b) => b[0] - a[0]).map((r) => {
+      const dir = r[2] === 0 ? '<span class="pf-tbuy">buy</span>' : '<span class="pf-tsell">sell</span>';
+      return '<tr><td class="mut">' + pfDate(r[0]) + '</td><td>' + dir + '</td><td>' + pfNum(r[3], 2) + '</td>' +
+        '<td class="mono">' + esc(r[4]) + '</td><td>' + (r[5] ? Number(r[5]) : '—') + ' &rarr; ' + Number(r[6]) + '</td>' +
+        '<td style="color:' + pfCol(r[7]) + ';font-weight:600">' + pfSigned(r[7], cur) + '</td></tr>';
+    }).join('');
+    hist = '<div style="overflow-x:auto"><table class="pf-table"><thead><tr><th>Close Time (UTC)</th><th>Type</th><th>Volume</th><th>Symbol</th><th>Open &rarr; Close</th><th>Profit</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  } else hist = '<div class="mut">Belum ada histori trade.</div>';
+  h += '<div class="pf-card"><h3>Trading History &middot; 50 trade terakhir</h3>' + hist + '</div>';
+  // ---- posisi terbuka ----
+  let pos = '';
+  if (s.positions && s.positions.length) {
+    const rows = s.positions.map((r) => {
+      const dir = r[1] === 0 ? '<span class="pf-tbuy">buy</span>' : '<span class="pf-tsell">sell</span>';
+      return '<tr><td class="mono">' + esc(r[0]) + '</td><td>' + dir + '</td><td>' + pfNum(r[2], 2) + '</td>' +
+        '<td>' + r[3] + '</td><td>' + r[4] + '</td>' +
+        '<td style="color:' + pfCol(r[5]) + ';font-weight:600">' + pfSigned(r[5], cur) + '</td></tr>';
+    }).join('');
+    pos = '<div style="overflow-x:auto"><table class="pf-table"><thead><tr><th>Symbol</th><th>Type</th><th>Volume</th><th>Open</th><th>Current</th><th>P/L</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+  } else pos = '<div class="mut">Tidak ada posisi terbuka.</div>';
+  h += '<div class="pf-card"><h3>Open Positions</h3>' + pos + '</div>';
+
+  B.innerHTML = h;
+  $('pfModal').classList.remove('hidden');
+  requestAnimationFrame(() => { const cv = document.getElementById('pfChart'); if (cv) drawGrowth(cv, s.curve); });
+}
+window.showPortfolio = showPortfolio;
+$('pfClose').onclick = () => $('pfModal').classList.add('hidden');
+$('pfModal').onclick = (e) => { if (e.target === $('pfModal')) $('pfModal').classList.add('hidden'); };
 
 // ---------------- actions ----------------
 window.copyText = copyText;

@@ -60,11 +60,19 @@ async function listKeys(env) {
     'SELECT * FROM devices ORDER BY first_seen ASC').all();
   const byKey = {};
   for (const d of (devices.results || [])) {
+    let stats = null;
+    if (d.stats_full) {
+      try { stats = JSON.parse(d.stats_full); } catch (_e) { stats = null; }
+    }
     (byKey[d.key_id] = byKey[d.key_id] || []).push({
       account: d.account, broker: d.broker,
       first_seen: d.first_seen, first_seen_str: fmtTime(d.first_seen),
       last_seen: d.last_seen, last_seen_str: fmtTime(d.last_seen),
       last_ip: d.last_ip,
+      balance: d.balance, equity: d.equity, float_pl: d.float_pl,
+      wins: d.wins, losses: d.losses, closed_pl: d.closed_pl,
+      stats_at: d.stats_at, stats_at_str: fmtTime(d.stats_at),
+      stats,
     });
   }
   const ts = now();

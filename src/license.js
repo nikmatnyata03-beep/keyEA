@@ -25,8 +25,13 @@ export async function coreValidate(db, p, ip) {
   const st = hasStats ? {
     balance: num(p.stats.balance), equity: num(p.stats.equity), float_pl: num(p.stats.float_pl),
     wins: Math.max(0, Math.round(num(p.stats.wins))), losses: Math.max(0, Math.round(num(p.stats.losses))),
-    closed_pl: num(p.stats.closed_pl),
+    closed_pl: num(p.stats.closed_pl !== undefined && p.stats.closed_pl !== null ? p.stats.closed_pl : p.stats.profit_closed),
   } : null;
+  // JSON portofolio lengkap ala MQL5 Signal (curve, monthly, history, dll)
+  let statsFull = null;
+  if (p.stats) {
+    try { statsFull = JSON.stringify(p.stats).slice(0, 500000); } catch (_e) { statsFull = null; }
+  }
 
   if (!keyNorm || !account) {
     return { valid: false, error: 'INVALID_REQUEST', event: 'INVALID',
@@ -82,7 +87,11 @@ export async function coreValidate(db, p, ip) {
     }
 
     // Slot tersedia -> bind sekarang (aktivasi pertama / setelah reset)
-    if (st) {
+    if (statsFull) {
+      await db.prepare(
+        'INSERT INTO devices (key_id, account, broker, first_seen, last_seen, last_ip, balance, equity, float_pl, wins, losses, closed_pl, stats_at, stats_full) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+      ).bind(row.id, account, broker, ts, ts, ip, st ? st.balance : 0, st ? st.equity : 0, st ? st.float_pl : 0, st ? st.wins : 0, st ? st.losses : 0, st ? st.closed_pl : 0, ts, statsFull).run();
+    } else if (st) {
       await db.prepare(
         'INSERT INTO devices (key_id, account, broker, first_seen, last_seen, last_ip, balance, equity, float_pl, wins, losses, closed_pl, stats_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)'
       ).bind(row.id, account, broker, ts, ts, ip, st.balance, st.equity, st.float_pl, st.wins, st.losses, st.closed_pl, ts).run();
@@ -104,7 +113,11 @@ export async function coreValidate(db, p, ip) {
     await log(db, row.id, row.key, account, broker, ip, 'ACTIVATE',
       'Device baru terikat (slot ' + (used + 1) + '/' + row.max_devices + ')');
   } else {
-    if (st) {
+    if (statsFull) {
+      await db.prepare(
+        'UPDATE devices SET last_seen = ?, last_ip = ?, broker = ?, balance = ?, equity = ?, float_pl = ?, wins = ?, losses = ?, closed_pl = ?, stats_at = ?, stats_full = ? WHERE id = ?'
+      ).bind(ts, ip, broker || device.broker, st ? st.balance : device.balance, st ? st.equity : device.equity, st ? st.float_pl : device.float_pl, st ? st.wins : device.wins, st ? st.losses : device.losses, st ? st.closed_pl : device.closed_pl, ts, statsFull, device.id).run();
+    } else if (st) {
       await db.prepare(
         'UPDATE devices SET last_seen = ?, last_ip = ?, broker = ?, balance = ?, equity = ?, float_pl = ?, wins = ?, losses = ?, closed_pl = ?, stats_at = ? WHERE id = ?'
       ).bind(ts, ip, broker || device.broker, st.balance, st.equity, st.float_pl, st.wins, st.losses, st.closed_pl, ts, device.id).run();
