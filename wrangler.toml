@@ -19,7 +19,7 @@ compatibility_date = "2025-06-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "quantum-queen-license"
-database_id = "GANTI_DENGAN_ID_DARI_WRANGLER_D1_CREATE"
+database_id = "d6953e25-fc13-40ca-befa-0b88f4ae7b7f"
 
 # --------------------------------------------- Static assets (dashboard SPA)
 [assets]
