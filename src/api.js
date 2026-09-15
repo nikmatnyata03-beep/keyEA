@@ -36,10 +36,16 @@ async function handleValidate(request, env) {
   const ts = now();
   const body = await readJson(request);
   const ip = clientIp(request);
+  // Statistik trading opsional dari EA (abaikan bila tidak ada / tidak valid)
+  const stats = {};
+  for (const f of ['balance', 'equity', 'float_pl', 'wins', 'losses', 'closed_pl']) {
+    if (body[f] !== undefined && body[f] !== null && body[f] !== '') stats[f] = body[f];
+  }
   const res = await coreValidate(env.DB, {
     key: body.key || body.license_key || '',
     account: body.account !== undefined ? String(body.account) : '',
     broker: body.broker || '',
+    stats: Object.keys(stats).length ? stats : null,
   }, ip);
   return payloadToResult(res, ts);
 }

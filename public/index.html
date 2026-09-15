@@ -201,16 +201,17 @@ tbody tr:hover{background:rgba(245,158,11,.04)}
 
   <div class="card pad" style="margin-bottom:22px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-      <h2 style="margin:0">🖥️ EA Terhubung <span class="mut" style="font-size:13px;font-weight:400">— portofolio device customer aktif</span></h2>
+      <h2 style="margin:0">🖥️ EA Terhubung <span class="mut" style="font-size:13px;font-weight:400">— portofolio & performa trading customer</span></h2>
       <span class="mut" id="devCount"></span>
     </div>
     <div style="overflow-x:auto">
       <table>
         <thead><tr>
-          <th>License Key</th><th>Akun MT5</th><th>Broker</th><th>Status Lisensi</th>
-          <th>Check-in Terakhir</th><th>IP</th><th>Berlaku Sampai</th>
+          <th>License Key</th><th>Akun / Broker</th><th>Balance</th><th>Equity</th>
+          <th>W / L</th><th>Profit Closed</th><th>Status</th>
+          <th>Check-in Terakhir</th><th>Berlaku Sampai</th>
         </tr></thead>
-        <tbody id="devBody"><tr><td colspan="7"><div class="empty">Memuat…</div></td></tr></tbody>
+        <tbody id="devBody"><tr><td colspan="9"><div class="empty">Memuat…</div></td></tr></tbody>
       </table>
     </div>
   </div>
@@ -360,18 +361,29 @@ function renderDevices() {
   rows.sort((a, b) => (b.d.last_seen || 0) - (a.d.last_seen || 0));
   $('devCount').textContent = rows.length ? rows.length + ' device terhubung' : '';
   if (!rows.length) {
-    $('devBody').innerHTML = '<tr><td colspan="7"><div class="empty">Belum ada EA yang terhubung. Device muncul otomatis begitu customer memasang EA dengan key-nya.</div></td></tr>';
+    $('devBody').innerHTML = '<tr><td colspan="9"><div class="empty">Belum ada EA yang terhubung. Device muncul otomatis begitu customer memasang EA dengan key-nya.</div></td></tr>';
     return;
   }
-  $('devBody').innerHTML = rows.map(({ k, d }) => `<tr>
+  const money = (v) => (v === null || v === undefined || v === '') ? '—' : Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const signed = (v) => (Number(v) > 0 ? '+' : '') + money(v);
+  const col = (v) => (Number(v) > 0 ? '#4ade80' : (Number(v) < 0 ? '#f87171' : 'inherit'));
+  $('devBody').innerHTML = rows.map(({ k, d }) => {
+    const bal = Number(d.balance || 0), eq = Number(d.equity || 0);
+    const wl = (Number(d.wins) || 0) + (Number(d.losses) || 0);
+    const wr = wl ? Math.round((Number(d.wins) || 0) / wl * 100) + '%' : '—';
+    const hasStat = d.stats_at || d.balance || d.wins || d.losses;
+    return `<tr>
     <td><code class="mono" onclick="copyText('${k.key}')" style="cursor:pointer" title="Klik untuk salin">${k.key}</code></td>
-    <td><b class="mono">${esc(d.account)}</b></td>
-    <td>${esc(d.broker || '—')}</td>
+    <td><b class="mono">${esc(d.account)}</b><br><span class="mut">${esc(d.broker || '—')}</span></td>
+    <td class="mono">${hasStat ? money(d.balance) : '<span class="mut">—</span>'}</td>
+    <td class="mono">${hasStat ? esc(money(d.equity)) + '<br><span class="mut">float </span><span style="color:' + col(d.float_pl) + '">' + signed(d.float_pl) + '</span>' : '<span class="mut">—</span>'}</td>
+    <td>${hasStat ? '<span style="color:#4ade80">' + (d.wins || 0) + 'W</span> <span style="color:#f87171">' + (d.losses || 0) + 'L</span><br><span class="mut">winrate ' + wr + '</span>' : '<span class="mut">—</span>'}</td>
+    <td class="mono" style="color:${col(d.closed_pl)}">${hasStat ? signed(d.closed_pl) : '—'}</td>
     <td>${statusBadge(k)}</td>
-    <td><div>${relTime(d.last_seen)}</div><span class="mut">${utcStr(d.last_seen)} UTC</span></td>
-    <td><span class="mut mono">${esc(d.last_ip || '—')}</span></td>
+    <td><div>${relTime(d.last_seen)}</div><span class="mut mono">${esc(d.last_ip || '—')}</span></td>
     <td>${k.expires_at ? utcStr(k.expires_at) + ' UTC' : 'Tanpa batas'}</td>
-  </tr>`).join('');
+  </tr>`;
+  }).join('');
 }
 function renderKeys() {
   const q = $('search').value.trim().toLowerCase();

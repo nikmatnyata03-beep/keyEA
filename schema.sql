@@ -28,6 +28,13 @@ CREATE TABLE IF NOT EXISTS devices (
   first_seen  INTEGER NOT NULL,
   last_seen   INTEGER NOT NULL,
   last_ip     TEXT,
+  balance     REAL    DEFAULT 0,                    -- statistik trading dari EA
+  equity      REAL    DEFAULT 0,
+  float_pl    REAL    DEFAULT 0,
+  wins        INTEGER DEFAULT 0,
+  losses      INTEGER DEFAULT 0,
+  closed_pl   REAL    DEFAULT 0,
+  stats_at    INTEGER,
   UNIQUE(key_id, account)
 );
 
