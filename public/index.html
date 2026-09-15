@@ -199,6 +199,22 @@ tbody tr:hover{background:rgba(245,158,11,.04)}
     </div>
   </div>
 
+  <div class="card pad" style="margin-bottom:22px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+      <h2 style="margin:0">🖥️ EA Terhubung <span class="mut" style="font-size:13px;font-weight:400">— portofolio device customer aktif</span></h2>
+      <span class="mut" id="devCount"></span>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>License Key</th><th>Akun MT5</th><th>Broker</th><th>Status Lisensi</th>
+          <th>Check-in Terakhir</th><th>IP</th><th>Berlaku Sampai</th>
+        </tr></thead>
+        <tbody id="devBody"><tr><td colspan="7"><div class="empty">Memuat…</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="card pad">
     <h2>Aktivitas Terbaru</h2>
     <p class="sub">50 event validasi terakhir dari seluruh user (polling tiap refresh).</p>
@@ -336,6 +352,26 @@ async function loadKeys() {
   if (!data.ok) return;
   KEYS_CACHE = data.keys || [];
   renderKeys();
+  renderDevices();
+}
+function renderDevices() {
+  const rows = [];
+  (KEYS_CACHE || []).forEach((k) => (k.devices || []).forEach((d) => rows.push({ k, d })));
+  rows.sort((a, b) => (b.d.last_seen || 0) - (a.d.last_seen || 0));
+  $('devCount').textContent = rows.length ? rows.length + ' device terhubung' : '';
+  if (!rows.length) {
+    $('devBody').innerHTML = '<tr><td colspan="7"><div class="empty">Belum ada EA yang terhubung. Device muncul otomatis begitu customer memasang EA dengan key-nya.</div></td></tr>';
+    return;
+  }
+  $('devBody').innerHTML = rows.map(({ k, d }) => `<tr>
+    <td><code class="mono" onclick="copyText('${k.key}')" style="cursor:pointer" title="Klik untuk salin">${k.key}</code></td>
+    <td><b class="mono">${esc(d.account)}</b></td>
+    <td>${esc(d.broker || '—')}</td>
+    <td>${statusBadge(k)}</td>
+    <td><div>${relTime(d.last_seen)}</div><span class="mut">${utcStr(d.last_seen)} UTC</span></td>
+    <td><span class="mut mono">${esc(d.last_ip || '—')}</span></td>
+    <td>${k.expires_at ? utcStr(k.expires_at) + ' UTC' : 'Tanpa batas'}</td>
+  </tr>`).join('');
 }
 function renderKeys() {
   const q = $('search').value.trim().toLowerCase();
