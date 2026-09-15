@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quantum Queen X — License Server</title>
+<style>
+:root{
+  --bg:#09090b; --card:#111114; --card2:#18181b; --line:#27272a;
+  --text:#f4f4f5; --muted:#a1a1aa; --dim:#71717a;
+  --amber:#f59e0b; --amber2:#fbbf24; --emerald:#10b981; --rose:#f43f5e;
+  --orange:#fb923c; --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:14px/1.55 ui-sans-serif,system-ui,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+a{color:var(--amber2)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace}
+
+/* ---------- header / footer ---------- */
+header{position:sticky;top:0;z-index:40;background:rgba(9,9,11,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hwrap{max-width:1180px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:.2px}
+.logo .crown{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#b45309,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:17px}
+.hspace{flex:1}
+.chip{font-size:12px;color:var(--muted);background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:5px 12px;display:inline-flex;align-items:center;gap:7px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--emerald);box-shadow:0 0 8px var(--emerald)}
+.dot.off{background:var(--rose);box-shadow:0 0 8px var(--rose)}
+footer{margin-top:auto;border-top:1px solid var(--line);background:var(--card)}
+.fwrap{max-width:1180px;margin:0 auto;padding:14px 20px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;color:var(--dim);font-size:12.5px}
+
+/* ---------- layout ---------- */
+main{flex:1;width:100%;max-width:1180px;margin:0 auto;padding:26px 20px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius)}
+.pad{padding:20px}
+.hidden{display:none!important}
+h2{font-size:15px;font-weight:700;margin-bottom:2px}
+.sub{color:var(--dim);font-size:12.5px;margin-bottom:16px}
+
+/* ---------- login ---------- */
+#loginWrap{min-height:calc(100vh - 140px);display:flex;align-items:center;justify-content:center}
+.login-card{width:100%;max-width:400px;padding:34px}
+.login-card .crown{width:56px;height:56px;border-radius:15px;background:linear-gradient(135deg,#b45309,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:27px;margin:0 auto 18px}
+.login-card h1{font-size:19px;text-align:center;margin-bottom:4px}
+.login-card .sub{text-align:center}
+
+/* ---------- form ---------- */
+label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px 2px;font-weight:600;letter-spacing:.3px}
+input,select{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;font-size:14px;outline:none;transition:border .15s}
+input:focus{border-color:var(--amber)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:10px;padding:10px 16px;font-size:13.5px;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn:hover{border-color:var(--dim)}
+.btn.primary{background:var(--amber);border-color:var(--amber);color:#1c1004}
+.btn.primary:hover{background:var(--amber2)}
+.btn.danger{color:var(--rose);border-color:rgba(244,63,94,.35)}
+.btn.danger:hover{background:rgba(244,63,94,.12);border-color:var(--rose)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:6px 11px;font-size:12.5px;border-radius:8px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ---------- stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.stat .v{font-size:26px;font-weight:800;line-height:1.1}
+.stat .k{font-size:12px;color:var(--muted);margin-top:3px}
+.stat.a .v{color:var(--emerald)} .stat.r .v{color:var(--rose)} .stat.o .v{color:var(--orange)} .stat.m .v{color:var(--amber2)}
+
+/* ---------- toolbar / table ---------- */
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.toolbar input{max-width:280px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;min-width:940px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--card2);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:13.5px}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(245,158,11,.04)}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 10px;white-space:nowrap}
+.b-act{background:rgba(16,185,129,.14);color:#34d399}
+.b-rev{background:rgba(244,63,94,.14);color:#fb7185}
+.b-exp{background:rgba(251,146,60,.14);color:#fdba74}
+.b-new{background:rgba(161,161,170,.14);color:#c4c4cc}
+.b-ev{font-size:10.5px;padding:3px 8px}
+.ev-VALID{background:rgba(16,185,129,.13);color:#34d399}
+.ev-ACTIVATE{background:rgba(245,158,11,.14);color:#fbbf24}
+.ev-EXPIRED{background:rgba(251,146,60,.14);color:#fdba74}
+.ev-REVOKED,.ev-DEVICE_LIMIT,.ev-INVALID{background:rgba(244,63,94,.13);color:#fb7185}
+.ev-NOT_FOUND{background:rgba(161,161,170,.13);color:#c4c4cc}
+.ev-ADMIN_CREATE,.ev-ADMIN_REVOKE,.ev-ADMIN_ENABLE,.ev-ADMIN_RESET{background:rgba(217,70,239,.12);color:#e879f9}
+.keycell{display:flex;align-items:center;gap:8px}
+.keycell code{background:var(--card2);border:1px solid var(--line);padding:4px 9px;border-radius:8px;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.keycell code:hover{border-color:var(--amber);color:var(--amber2)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.mut{color:var(--dim);font-size:12px;white-space:nowrap}
+.devline{white-space:nowrap}
+.empty{padding:34px;text-align:center;color:var(--dim)}
+
+/* ---------- grid generate ---------- */
+.gen-grid{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:18px}
+@media(max-width:760px){.gen-grid{grid-template-columns:1fr}}
+.gen-out{background:var(--card2);border:1px dashed var(--line);border-radius:12px;padding:14px;min-height:120px}
+.gen-out .krow{display:flex;justify-content:space-between;gap:10px;padding:5px 2px;border-bottom:1px dashed var(--line);align-items:center}
+.gen-out .krow:last-child{border-bottom:none}
+.gen-out code{font-size:13px;color:var(--amber2)}
+
+/* ---------- feed / modal ---------- */
+.feed{max-height:340px;overflow-y:auto}
+.feed .frow{display:flex;gap:10px;align-items:flex-start;padding:9px 2px;border-bottom:1px dashed var(--line)}
+.feed .frow:last-child{border-bottom:none}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.66);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{width:100%;max-width:640px;max-height:82vh;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:var(--radius)}
+.modal .mhead{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line)}
+.modal .mbody{padding:16px 20px;overflow-y:auto}
+.scroll::-webkit-scrollbar{width:9px}
+.scroll::-webkit-scrollbar-thumb{background:#3f3f46;border-radius:8px}
+.warnbar{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.4);color:#fcd34d;border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:16px}
+
+/* ---------- toast ---------- */
+#toasts{position:fixed;right:18px;bottom:18px;z-index:90;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--card2);border:1px solid var(--line);border-left:3px solid var(--emerald);border-radius:10px;padding:10px 16px;font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.5);animation:tin .18s ease}
+.toast.err{border-left-color:var(--rose)}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(max-width:640px){.hwrap{padding:12px 14px}main{padding:18px 14px 30px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hwrap">
+    <div class="logo"><div class="crown">♛</div><span>Quantum Queen X <span style="color:var(--dim);font-weight:400">· License Server</span></span></div>
+    <div class="hspace"></div>
+    <span class="chip" id="srvChip"><span class="dot off" id="srvDot"></span><span id="srvTime">memuat…</span></span>
+    <label class="chip" style="cursor:pointer" title="Perbarui otomatis tiap 30 detik"><input type="checkbox" id="autoRefresh" checked style="width:auto;accent-color:var(--amber)"> Auto-refresh</label>
+    <button class="btn sm ghost hidden" id="btnLogout">Keluar</button>
+  </div>
+</header>
+
+<!-- ================= LOGIN ================= -->
+<main id="loginWrap">
+  <div class="card login-card">
+    <div class="crown">♛</div>
+    <h1>Dashboard Admin</h1>
+    <p class="sub">Masukkan password admin untuk mengelola license key.</p>
+    <div id="loginErr" style="color:var(--rose);font-size:12.5px;margin-bottom:10px;display:none"></div>
+    <form id="loginForm">
+      <label for="pw">PASSWORD ADMIN</label>
+      <input type="password" id="pw" placeholder="••••••••••" autocomplete="current-password" required>
+      <button class="btn primary" style="width:100%;margin-top:14px" type="submit" id="btnLogin">Masuk</button>
+    </form>
+    <p style="color:var(--dim);font-size:11.5px;margin-top:14px;text-align:center">Default password: <span class="mono">quantum-queen-admin</span><br>(ubah via <span class="mono">wrangler secret put ADMIN_PASSWORD</span>)</p>
+  </div>
+</main>
+
+<!-- ================= APP ================= -->
+<main id="appWrap" class="hidden">
+  <div id="warnDefault" class="warnbar hidden">⚠ Password admin masih <b>default</b>. Segera ganti: <span class="mono">npx wrangler secret put ADMIN_PASSWORD</span></div>
+
+  <div class="stats" id="statsGrid"></div>
+
+  <div class="card pad" style="margin-bottom:22px">
+    <h2>Generate License Key</h2>
+    <p class="sub">Buat key baru untuk dibagikan ke pembeli. Masa aktif dihitung sejak aktivasi pertama di akun MT5.</p>
+    <div class="gen-grid">
+      <form id="genForm">
+        <label for="gLabel">LABEL / NAMA PEMBELI</label>
+        <input id="gLabel" placeholder="mis. Budi — akun PSC" style="margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div><label for="gDur">DURASI (HARI)</label><input id="gDur" type="number" min="0" max="3650" value="30"></div>
+          <div><label for="gDev">MAKS DEVICE</label><input id="gDev" type="number" min="1" max="10" value="1"></div>
+        </div>
+        <label for="gQty" style="margin-top:12px">JUMLAH KEY</label>
+        <input id="gQty" type="number" min="1" max="50" value="1">
+        <button class="btn primary" style="width:100%;margin-top:16px" type="submit" id="btnGen">Generate Key</button>
+      </form>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <label style="margin:0">HASIL GENERATE</label>
+          <button class="btn sm ghost" id="btnCopyAll" disabled>Salin Semua</button>
+        </div>
+        <div class="gen-out scroll" id="genOut"><p class="empty" style="padding:22px">Belum ada key yang di-generate pada sesi ini.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card pad" style="margin-bottom:22px">
+    <div class="toolbar">
+      <h2 style="margin:0">Daftar License Key</h2>
+      <div class="hspace"></div>
+      <input id="search" placeholder="Cari key / label / akun…">
+      <button class="btn sm" id="btnReload">Muat Ulang</button>
+    </div>
+    <div class="tablewrap scroll">
+      <table>
+        <thead><tr>
+          <th>Key</th><th>Label</th><th>Status</th><th>Device Terikat</th>
+          <th>Check-in Terakhir</th><th>Aktif Sampai</th><th style="text-align:right">Aksi</th>
+        </tr></thead>
+        <tbody id="keysBody"><tr><td colspan="7"><div class="empty">Memuat…</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card pad">
+    <h2>Aktivitas Terbaru</h2>
+    <p class="sub">50 event validasi terakhir dari seluruh user (polling tiap refresh).</p>
+    <div class="feed scroll" id="feed"><div class="empty">Memuat…</div></div>
+  </div>
+</main>
+
+<footer>
+  <div class="fwrap">
+    <span>♛ Quantum Queen X · <b>1 Device = 1 Key</b> · Cloudflare Workers + D1</span>
+    <span>API: <span class="mono" id="apiUrl">-</span></span>
+  </div>
+</footer>
+
+<!-- ================= MODAL LOG ================= -->
+<div class="modal-bg hidden" id="logModal">
+  <div class="modal">
+    <div class="mhead"><b id="logTitle">Riwayat</b><button class="btn sm ghost" id="logClose">✕</button></div>
+    <div class="mbody feed scroll" id="logBody"></div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<script>
+/* ============================================================
+   Quantum Queen X — Dashboard admin (vanilla JS, tanpa build)
+   ============================================================ */
+'use strict';
+
+// --- XTransformPort propagation (preview gateway sandbox) ---
+const XTP = new URLSearchParams(location.search).get('XTransformPort');
+const withXTP = (p) => XTP ? (p + (p.includes('?') ? '&' : '?') + 'XTransformPort=' + XTP) : p;
+
+const $ = (id) => document.getElementById(id);
+let TOKEN = localStorage.getItem('qqx_token') || '';
+let KEYS_CACHE = [];
+let FEED_TIMER = null;
+
+$('apiUrl').textContent = location.origin;
+
+// ---------------- helpers ----------------
+function toast(msg, isErr) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (isErr ? ' err' : '');
+  t.textContent = msg;
+  $('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+function relTime(epoch) {
+  if (!epoch) return '—';
+  const s = Math.floor(Date.now() / 1000) - epoch;
+  if (s < 60) return 'baru saja';
+  if (s < 3600) return Math.floor(s / 60) + ' mnt lalu';
+  if (s < 86400) return Math.floor(s / 3600) + ' jam lalu';
+  if (s < 2592000) return Math.floor(s / 86400) + ' hr lalu';
+  return new Date(epoch * 1000).toISOString().slice(0, 10);
+}
+function utcStr(epoch) {
+  if (!epoch) return '—';
+  const d = new Date(epoch * 1000), p = (n) => String(n).padStart(2, '0');
+  return d.getUTCFullYear() + '-' + p(d.getUTCMonth() + 1) + '-' + p(d.getUTCDate()) + ' ' + p(d.getUTCHours()) + ':' + p(d.getUTCMinutes());
+}
+async function copyText(txt) {
+  try { await navigator.clipboard.writeText(txt); toast('Disalin: ' + txt); }
+  catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('Disalin: ' + txt); } catch (_) { toast('Gagal menyalin', true); }
+    ta.remove();
+  }
+}
+async function api(path, opts = {}) {
+  const headers = Object.assign({ 'content-type': 'application/json' }, opts.headers || {});
+  if (TOKEN) headers['authorization'] = 'Bearer ' + TOKEN;
+  const res = await fetch(withXTP(path), Object.assign({}, opts, { headers }));
+  let data = {};
+  try { data = await res.json(); } catch (_) {}
+  if (res.status === 401 && TOKEN) { doLogout(true); throw new Error('401'); }
+  if (!res.ok && !data.message) data.message = 'HTTP ' + res.status;
+  return { status: res.status, data };
+}
+
+// ---------------- auth flow ----------------
+function showApp(show) {
+  $('loginWrap').classList.toggle('hidden', show);
+  $('appWrap').classList.toggle('hidden', !show);
+  $('btnLogout').classList.toggle('hidden', !show);
+}
+function doLogout(silent) {
+  TOKEN = ''; localStorage.removeItem('qqx_token');
+  showApp(false);
+  if (!silent) toast('Anda telah keluar.');
+}
+$('btnLogout').onclick = () => doLogout(false);
+
+$('loginForm').onsubmit = async (e) => {
+  e.preventDefault();
+  $('btnLogin').disabled = true; $('btnLogin').textContent = 'Memeriksa…';
+  try {
+    const { status, data } = await api('/api/admin/login', { method: 'POST', body: JSON.stringify({ password: $('pw').value }) });
+    if (status === 200 && data.ok) {
+      TOKEN = data.token; localStorage.setItem('qqx_token', TOKEN);
+      $('warnDefault').classList.toggle('hidden', !data.warn_default_password);
+      showApp(true); refreshAll(); toast('Selamat datang, admin!');
+    } else {
+      $('loginErr').style.display = 'block';
+      $('loginErr').textContent = data.message || 'Password salah.';
+    }
+  } catch (err) { $('loginErr').style.display = 'block'; $('loginErr').textContent = 'Server tidak dapat dihubungi.'; }
+  $('btnLogin').disabled = false; $('btnLogin').textContent = 'Masuk';
+};
+
+// ---------------- data loading ----------------
+async function loadStats() {
+  const { data } = await api('/api/admin/stats');
+  if (!data.ok) return;
+  const s = data;
+  $('statsGrid').innerHTML =
+    stat(s.total, 'Total Key') + stat(s.active, 'Aktif', 'a') + stat(s.bound, 'Terpakai', 'm') +
+    stat(s.expired, 'Kadaluarsa', 'o') + stat(s.revoked, 'Nonaktif', 'r') + stat(s.checkins24h, 'Check-in 24 Jam', 'a');
+  $('srvDot').classList.remove('off');
+  $('srvTime').textContent = 'Server ' + (data.server_time || '').slice(11) + ' UTC';
+}
+const stat = (v, k, cls) => `<div class="stat ${cls || ''}"><div class="v">${v ?? 0}</div><div class="k">${k}</div></div>`;
+
+function statusBadge(k) {
+  if (k.status === 'revoked') return '<span class="badge b-rev">NONAKTIF</span>';
+  if (k.is_expired) return '<span class="badge b-exp">KADALUARSA</span>';
+  if (!k.is_bound) return '<span class="badge b-new">BELUM AKTIF</span>';
+  return '<span class="badge b-act">AKTIF</span>';
+}
+
+async function loadKeys() {
+  const { data } = await api('/api/admin/keys');
+  if (!data.ok) return;
+  KEYS_CACHE = data.keys || [];
+  renderKeys();
+}
+function renderKeys() {
+  const q = $('search').value.trim().toLowerCase();
+  const rows = KEYS_CACHE.filter((k) => !q ||
+    (k.key + ' ' + (k.label || '') + ' ' + (k.last_account || '') + ' ' + (k.last_broker || '')).toLowerCase().includes(q));
+  if (!rows.length) { $('keysBody').innerHTML = '<tr><td colspan="7"><div class="empty">Tidak ada key.</div></td></tr>'; return; }
+  $('keysBody').innerHTML = rows.map((k) => {
+    const dev = (k.devices && k.devices.length)
+      ? k.devices.map((d) => `<div class="devline"><b class="mono">${esc(d.account)}</b> <span class="mut">${esc(d.broker || '')}</span><br><span class="mut">lihat ${relTime(d.last_seen)}</span></div>`).join('')
+      : '<span class="mut">belum ada</span>';
+    return `<tr>
+      <td><div class="keycell"><code class="mono" onclick="copyText('${k.key}')" title="Klik untuk salin">${k.key}</code></div>
+          <span class="mut">dibuat ${relTime(k.created_at)}</span></td>
+      <td>${esc(k.label || '—')}</td>
+      <td>${statusBadge(k)}</td>
+      <td>${dev}</td>
+      <td><div>${relTime(k.last_checkin_at)}</div><span class="mut mono">${esc(k.last_ip || '')}</span></td>
+      <td>${k.expires_at ? utcStr(k.expires_at) + ' UTC' : '—'}</td>
+      <td><div class="acts" style="justify-content:flex-end">
+        <button class="btn sm" onclick="resetKey(${k.id})" title="Lepas ikatan device agar bisa pindah akun">Reset</button>
+        <button class="btn sm ${k.status === 'revoked' ? '' : 'danger'}" onclick="toggleKey(${k.id},'${k.status === 'revoked' ? 'active' : 'revoked'}')">${k.status === 'revoked' ? 'Aktifkan' : 'Revoke'}</button>
+        <button class="btn sm" onclick="showLogs(${k.id})">Riwayat</button>
+        <button class="btn sm danger" onclick="delKey(${k.id})">Hapus</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+const esc = (s) => String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+async function loadFeed() {
+  const { data } = await api('/api/admin/logs?limit=50');
+  if (!data.ok) return;
+  if (!(data.logs || []).length) { $('feed').innerHTML = '<div class="empty">Belum ada aktivitas.</div>'; return; }
+  $('feed').innerHTML = data.logs.map((l) =>
+    `<div class="frow">
+      <span class="badge b-ev ev-${esc(l.event)}">${esc(l.event)}</span>
+      <div style="flex:1;min-width:0">
+        <div><code class="mono" style="font-size:12px">${esc(l.key_text || '—')}</code> · akun <b class="mono">${esc(l.account || '—')}</b> ${esc(l.broker ? '· ' + l.broker : '')}</div>
+        <div class="mut">${esc(l.detail || '')}</div>
+      </div>
+      <span class="mut" style="white-space:nowrap">${relTime(l.created_at)}</span>
+    </div>`).join('');
+}
+
+// ---------------- actions ----------------
+window.copyText = copyText;
+
+$('genForm').onsubmit = async (e) => {
+  e.preventDefault();
+  $('btnGen').disabled = true; $('btnGen').textContent = 'Membuat…';
+  try {
+    const { status, data } = await api('/api/admin/keys', { method: 'POST', body: JSON.stringify({
+      label: $('gLabel').value, duration_days: +$('gDur').value, max_devices: +$('gDev').value, quantity: +$('gQty').value }) });
+    if (status === 200 && data.ok) {
+      window.LAST_CREATED = data.created || [];
+      $('genOut').innerHTML = (data.created || []).map((k) =>
+        `<div class="krow"><code class="mono">${k}</code><button class="btn sm ghost" onclick="copyText('${k}')">Salin</button></div>`).join('');
+      $('btnCopyAll').disabled = false;
+      toast((data.created || []).length + ' key berhasil dibuat');
+      loadKeys(); loadStats();
+    } else toast(data.message || 'Gagal generate key', true);
+  } catch (_) { toast('Gagal terhubung ke server', true); }
+  $('btnGen').disabled = false; $('btnGen').textContent = 'Generate Key';
+};
+$('btnCopyAll').onclick = () => { if (window.LAST_CREATED) copyText(window.LAST_CREATED.join('\n')); };
+
+window.toggleKey = async (id, status) => {
+  if (status === 'revoked' && !confirm('Revoke key ini? User dengan key tersebut akan langsung terblokir.')) return;
+  const { data } = await api('/api/admin/keys/' + id + '/toggle', { method: 'POST', body: JSON.stringify({ status }) });
+  if (data.ok) { toast('Status key diperbarui'); loadKeys(); loadStats(); loadFeed(); }
+  else toast(data.message || 'Gagal', true);
+};
+window.resetKey = async (id) => {
+  if (!confirm('Reset device binding? Key bisa diaktivasi ulang di akun mana pun (slot terpakai ulang).')) return;
+  const { data } = await api('/api/admin/keys/' + id + '/reset', { method: 'POST' });
+  if (data.ok) { toast('Device binding direset'); loadKeys(); loadStats(); loadFeed(); }
+  else toast(data.message || 'Gagal', true);
+};
+window.delKey = async (id) => {
+  if (!confirm('HAPUS PERMANEN key ini beserta riwayatnya? Tindakan ini tidak bisa dibatalkan.')) return;
+  const { data } = await api('/api/admin/keys/' + id, { method: 'DELETE' });
+  if (data.ok) { toast('Key dihapus'); loadKeys(); loadStats(); loadFeed(); }
+  else toast(data.message || 'Gagal', true);
+};
+
+window.showLogs = async (id) => {
+  const k = KEYS_CACHE.find((x) => x.id === id) || {};
+  $('logTitle').textContent = 'Riwayat · ' + (k.key || ('#' + id));
+  $('logBody').innerHTML = '<div class="empty">Memuat…</div>';
+  $('logModal').classList.remove('hidden');
+  const { data } = await api('/api/admin/keys/' + id + '/logs?limit=150');
+  const logs = (data && data.logs) || [];
+  $('logBody').innerHTML = logs.length ? logs.map((l) =>
+    `<div class="frow">
+      <span class="badge b-ev ev-${esc(l.event)}">${esc(l.event)}</span>
+      <div style="flex:1;min-width:0">
+        <div>akun <b class="mono">${esc(l.account || '—')}</b> <span class="mut mono">${esc(l.ip || '')}</span></div>
+        <div class="mut">${esc(l.detail || '')}</div>
+      </div>
+      <span class="mut" style="white-space:nowrap">${utcStr(l.created_at)}</span>
+    </div>`).join('') : '<div class="empty">Belum ada riwayat untuk key ini.</div>';
+};
+$('logClose').onclick = () => $('logModal').classList.add('hidden');
+$('logModal').onclick = (e) => { if (e.target === $('logModal')) $('logModal').classList.add('hidden'); };
+
+$('search').oninput = renderKeys;
+$('btnReload').onclick = () => { refreshAll(); toast('Data dimuat ulang'); };
+
+function refreshAll() { loadStats().catch(() => { $('srvDot').classList.add('off'); }); loadKeys().catch(() => {}); loadFeed().catch(() => {}); }
+
+$('autoRefresh').onchange = () => {
+  if (FEED_TIMER) { clearInterval(FEED_TIMER); FEED_TIMER = null; }
+  if ($('autoRefresh').checked && TOKEN) FEED_TIMER = setInterval(refreshAll, 30000);
+};
+
+// ping publik untuk jam server
+async function pingSrv() {
+  try {
+    const r = await fetch(withXTP('/api/v1/ping'));
+    const d = await r.json();
+    if (d && d.server_time) { $('srvTime').textContent = 'Server ' + d.server_time.slice(11) + ' UTC'; $('srvDot').classList.remove('off'); }
+  } catch (_) { $('srvDot').classList.add('off'); $('srvTime').textContent = 'Server offline'; }
+}
+setInterval(pingSrv, 60000); pingSrv();
+
+// ---------------- boot ----------------
+if (TOKEN) {
+  api('/api/admin/stats').then(({ status, data }) => {
+    if (status === 200 && data.ok) {
+      $('warnDefault').classList.toggle('hidden', !data.warn_default_password);
+      showApp(true); refreshAll();
+      if ($('autoRefresh').checked) FEED_TIMER = setInterval(refreshAll, 30000);
+    } else doLogout(true);
+  }).catch(() => showApp(false));
+} else showApp(false);
+</script>
+</body>
+</html>

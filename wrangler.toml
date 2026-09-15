@@ -1,0 +1,32 @@
+# ============================================================================
+# Quantum Queen X — License Server (Cloudflare Workers + D1)
+# ----------------------------------------------------------------------------
+# 1. Ubah "database_id" di bawah setelah membuat database D1:
+#      npx wrangler d1 create quantum-queen-license
+# 2. Isi secret password admin (dipakai login dashboard):
+#      npx wrangler secret put ADMIN_PASSWORD
+# 3. Deploy:
+#      npx wrangler deploy
+# 4. Inisialisasi tabel database (sekali saja, atau setiap kali schema berubah):
+#      npx wrangler d1 execute quantum-queen-license --remote --file=./schema.sql
+# ============================================================================
+
+name = "quantum-queen-license"
+main = "src/index.js"
+compatibility_date = "2025-06-01"
+
+# ------------------------------------------------------------------ D1 (SQL)
+[[d1_databases]]
+binding = "DB"
+database_name = "quantum-queen-license"
+database_id = "GANTI_DENGAN_ID_DARI_WRANGLER_D1_CREATE"
+
+# --------------------------------------------- Static assets (dashboard SPA)
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# ------------------------------------------------------------ Variable vars
+[vars]
+# Nama produk yang tampil di dashboard & pesan API (boleh diubah)
+PRODUCT_NAME = "Quantum Queen X"
