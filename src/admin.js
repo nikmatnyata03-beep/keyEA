@@ -1,5 +1,5 @@
 // ============================================================
-// Quantum Queen X — Endpoint admin dashboard (Bearer token)
+// Seven Sigma — Endpoint admin dashboard (Bearer token)
 //   POST   /api/admin/login              -> token
 //   GET    /api/admin/stats              -> ringkasan
 //   GET    /api/admin/keys               -> daftar key + device

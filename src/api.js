@@ -1,5 +1,5 @@
 // ============================================================
-// Quantum Queen X — Endpoint untuk EA (dipanggil via WebRequest MT5)
+// Seven Sigma — Endpoint untuk EA (dipanggil via WebRequest MT5)
 //   GET  /api/v1/ping      -> cek server hidup
 //   POST /api/v1/validate  -> validasi berkala
 //   POST /api/v1/activate  -> aktivasi/ikatan device pertama kali
@@ -28,7 +28,7 @@ function payloadToResult(res, ts) {
 
 export async function handlePing(env) {
   const ts = now();
-  return json({ ok: true, product: env.PRODUCT_NAME || 'Quantum Queen X',
+  return json({ ok: true, product: env.PRODUCT_NAME || 'Seven Sigma',
     server_ts: ts, server_time: fmtTime(ts) });
 }
 

@@ -2,7 +2,7 @@
   "name": "quantum-queen-license",
   "version": "1.0.0",
   "private": true,
-  "description": "Quantum Queen X - Online license server (Cloudflare Workers + D1) with admin dashboard. 1 device 1 key.",
+  "description": "Seven Sigma - Online license server (Cloudflare Workers + D1) with admin dashboard. 1 device 1 key.",
   "scripts": {
     "dev": "wrangler dev --local --port 8787",
     "deploy": "wrangler deploy",

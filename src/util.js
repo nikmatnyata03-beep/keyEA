@@ -1,5 +1,5 @@
 // ============================================================
-// Quantum Queen X — License Server : Utilitas umum (zero-dependency)
+// Seven Sigma — License Server : Utilitas umum (zero-dependency)
 // ============================================================
 
 export function now() {

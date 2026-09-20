@@ -1,5 +1,5 @@
 // ============================================================
-// Quantum Queen X — Generator license key
+// Seven Sigma — Generator license key
 // Format : QQX-XXXXX-XXXXX-XXXXX (huruf besar tanpa I/O/0/1)
 // ============================================================
 

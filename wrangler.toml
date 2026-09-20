@@ -1,5 +1,5 @@
 # ============================================================================
-# Quantum Queen X — License Server (Cloudflare Workers + D1)
+# Seven Sigma — License Server (Cloudflare Workers + D1)
 # ----------------------------------------------------------------------------
 # 1. Ubah "database_id" di bawah setelah membuat database D1:
 #      npx wrangler d1 create quantum-queen-license
@@ -29,4 +29,4 @@ binding = "ASSETS"
 # ------------------------------------------------------------ Variable vars
 [vars]
 # Nama produk yang tampil di dashboard & pesan API (boleh diubah)
-PRODUCT_NAME = "Quantum Queen X"
+PRODUCT_NAME = "Seven Sigma"

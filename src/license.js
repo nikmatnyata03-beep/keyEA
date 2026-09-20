@@ -1,5 +1,5 @@
 // ============================================================
-// Quantum Queen X — Logika inti validasi lisensi (1 device 1 key)
+// Seven Sigma — Logika inti validasi lisensi (1 device 1 key)
 // Dipakai oleh endpoint /api/v1/validate dan /api/v1/activate
 // ============================================================
 

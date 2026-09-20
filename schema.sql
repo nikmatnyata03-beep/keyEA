@@ -1,5 +1,5 @@
 -- ============================================================
--- Quantum Queen X — License Server : Skema D1 (SQLite)
+-- Seven Sigma — License Server : Skema D1 (SQLite)
 -- Jalankan: npx wrangler d1 execute quantum-queen-license --remote --file=./schema.sql
 -- ============================================================
 

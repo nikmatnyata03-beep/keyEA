@@ -1,5 +1,5 @@
 // ============================================================
-// Quantum Queen X — License Server
+// Seven Sigma — License Server
 // Cloudflare Worker (zero-dependency) : API lisensi + dashboard assets
 // ------------------------------------------------------------
 // Routing:
@@ -37,7 +37,7 @@ const worker = {
 
     // Non-API: serahkan ke Workers Assets (dashboard).
     if (env.ASSETS) return env.ASSETS.fetch(request);
-    return json({ ok: true, product: env.PRODUCT_NAME || 'Quantum Queen X',
+    return json({ ok: true, product: env.PRODUCT_NAME || 'Seven Sigma',
       message: 'License server berjalan. Dashboard: sertakan folder ./public pada deploy.' });
   },
 };

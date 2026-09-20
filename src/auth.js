@@ -1,5 +1,5 @@
 // ============================================================
-// Quantum Queen X — Auth admin: token HMAC-SHA256 tanpa dependency
+// Seven Sigma — Auth admin: token HMAC-SHA256 tanpa dependency
 // Format token : "<expiry_epoch>.<hmac_hex(expiry_epoch, secret)>"
 // ============================================================
 

@@ -1,6 +1,6 @@
-# ♛ Quantum Queen X — License Server (Cloudflare Workers + D1)
+# 7σ Seven Sigma — License Server (Cloudflare Workers + D1)
 
-Server lisensi online untuk Expert Advisor **Quantum Queen X 4.3 (MT5)** dengan aturan
+Server lisensi online untuk Expert Advisor **Seven Sigma 4.3 (MT5)** dengan aturan
 **1 Device = 1 Key**: satu license key hanya boleh aktif di satu nomor akun trading MT5.
 Termasuk dashboard admin untuk generate key dan memantau semua user (akun, broker, IP,
 check-in terakhir, riwayat validasi).
@@ -83,7 +83,7 @@ Cara ini tidak butuh Node.js di komputer — cukup browser dan akun GitHub.
 cd cloudflare-license
 git init
 git add .
-git commit -m "Quantum Queen X license server"
+git commit -m "Seven Sigma license server"
 git branch -M main
 git remote add origin https://github.com/<USERNAME>/quantum-queen-license.git
 git push -u origin main
@@ -148,8 +148,8 @@ Lalu pada dialog input EA, grup **`>>>> License / Aktivasi`**:
 Log yang muncul di tab Journal saat start:
 
 ```
-Quantum Queen | License mode: ONLINE | berlaku sampai 2026.10.15 06:42 (waktu server)
-Quantum Queen | License: ONLINE | Key: QQX-... | Akun: 12345678
+Seven Sigma | License mode: ONLINE | berlaku sampai 2026.10.15 06:42 (waktu server)
+Seven Sigma | License: ONLINE | Key: QQX-... | Akun: 12345678
 ```
 
 ## 5. API Ringkas
