@@ -141,6 +141,35 @@ tbody tr:hover{background:rgba(255,153,0,.05)}
 .scroll::-webkit-scrollbar-thumb:hover{background:#3d3d3d}
 .warnbar{background:rgba(255,153,0,.07);border:1px solid rgba(255,153,0,.45);border-left:3px solid var(--amber);color:var(--amber2);border-radius:0;padding:9px 13px;font-size:11.5px;margin-bottom:16px}
 
+/* ---------- grafik aktivitas (SVG) ---------- */
+.chart-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.chart-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted)}
+.chart-legend i{display:inline-block;width:10px;height:10px;margin-right:5px;vertical-align:-1px}
+#actChart{width:100%;height:220px;display:block}
+#actChart text{font-family:ui-monospace,Menlo,Consolas,monospace}
+.chart-total{display:flex;gap:18px;flex-wrap:wrap;font-size:11.5px;margin-top:8px;color:var(--muted)}
+.chart-total b{color:var(--text);font-variant-numeric:tabular-nums}
+
+/* ---------- status live device ---------- */
+.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px;background:#3a3a3a}
+.live-dot.on{background:var(--emerald);box-shadow:0 0 6px rgba(34,197,94,.8)}
+.live-dot.idle{background:var(--amber2);box-shadow:0 0 6px rgba(255,176,0,.7)}
+.live-dot.off{background:var(--rose);opacity:.75}
+
+/* ---------- kartu pengaturan ---------- */
+.set-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+@media(max-width:860px){.set-grid{grid-template-columns:1fr}}
+.set-box{background:#101010;border:1px solid var(--line);padding:14px}
+.set-box h3{font-size:11px;text-transform:uppercase;letter-spacing:1.3px;color:var(--amber2);margin-bottom:4px}
+.set-box .hint{font-size:11px;color:var(--dim);margin-bottom:10px;line-height:1.55}
+.set-box label{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:1.1px;color:var(--muted);margin:10px 0 4px}
+.set-box input[type=text],.set-box input[type=password]{width:100%}
+.set-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.tg-state{display:inline-flex;align-items:center;gap:7px;font-size:11px;margin-bottom:6px}
+
+/* ---------- form umum ---------- */
+.form-lab{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:1.1px;color:var(--muted);margin:10px 0 4px}
+
 /* ---------- portfolio ala MQL5 signal ---------- */
 .pf-wrap{width:100%;max-width:1080px;max-height:92vh;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-top:2px solid var(--amber);border-radius:0}
 .pf-top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
@@ -212,15 +241,33 @@ canvas#pfChart{width:100%;height:260px;display:block}
       <input type="password" id="pw" placeholder="••••••••••" autocomplete="current-password" required>
       <button class="btn primary" style="width:100%;margin-top:14px" type="submit" id="btnLogin">Masuk</button>
     </form>
-    <p style="color:var(--dim);font-size:11.5px;margin-top:14px;text-align:center">Default password: <span class="mono">quantum-queen-admin</span><br>(ubah via <span class="mono">wrangler secret put ADMIN_PASSWORD</span>)</p>
+    <p style="color:var(--dim);font-size:11.5px;margin-top:14px;text-align:center">Default password: <span class="mono">quantum-queen-admin</span><br>(password bisa diganti dari menu <b>Pengaturan</b> setelah login)</p>
   </div>
 </main>
 
 <!-- ================= APP ================= -->
 <main id="appWrap" class="hidden">
-  <div id="warnDefault" class="warnbar hidden">⚠ Password admin masih <b>default</b>. Segera ganti: <span class="mono">npx wrangler secret put ADMIN_PASSWORD</span></div>
+  <div id="warnDefault" class="warnbar hidden">⚠ Password admin masih <b>default</b>. Segera ganti lewat menu <b>Pengaturan → Ganti Password Admin</b> di bawah.</div>
 
   <div class="stats" id="statsGrid"></div>
+
+  <div class="card pad" style="margin-bottom:22px">
+    <div class="chart-head">
+      <h2 style="margin:0">Grafik Aktivitas</h2>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn sm" id="btnAct7" onclick="loadActivity(7)">7 Hari</button>
+        <button class="btn sm" id="btnAct30" onclick="loadActivity(30)">30 Hari</button>
+      </div>
+    </div>
+    <div class="chart-legend" style="margin-bottom:8px">
+      <span><i style="background:var(--emerald)"></i>Validasi valid</span>
+      <span><i style="background:var(--amber)"></i>Aktivasi baru</span>
+      <span><i style="background:var(--rose)"></i>Ditolak / bermasalah</span>
+      <span><i style="background:#c084fc"></i>Aksi admin</span>
+    </div>
+    <svg id="actChart" preserveAspectRatio="none"></svg>
+    <div class="chart-total" id="actTotals"></div>
+  </div>
 
   <div class="card pad" style="margin-bottom:22px">
     <h2>Generate License Key</h2>
@@ -267,7 +314,7 @@ canvas#pfChart{width:100%;height:260px;display:block}
 
   <div class="card pad" style="margin-bottom:22px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-      <h2 style="margin:0">🖥️ EA Terhubung <span class="mut" style="font-size:13px;font-weight:400">— portofolio & performa trading customer</span></h2>
+      <h2 style="margin:0">🖥️ EA Terhubung <span class="mut" style="font-size:13px;font-weight:400">— portofolio & performa trading customer (refresh otomatis · EA v4.6 kirim data tiap 5 mnt)</span></h2>
       <span class="mut" id="devCount"></span>
     </div>
     <div style="overflow-x:auto">
@@ -282,16 +329,54 @@ canvas#pfChart{width:100%;height:260px;display:block}
     </div>
   </div>
 
-  <div class="card pad">
+  <div class="card pad" style="margin-bottom:22px">
     <h2>Aktivitas Terbaru</h2>
     <p class="sub">50 event validasi terakhir dari seluruh user (polling tiap refresh).</p>
     <div class="feed scroll" id="feed"><div class="empty">Memuat…</div></div>
+  </div>
+
+  <div class="card pad" style="margin-bottom:22px">
+    <h2>Pengaturan</h2>
+    <div class="set-grid" style="margin-top:12px">
+      <div class="set-box">
+        <h3>Notifikasi Telegram</h3>
+        <p class="hint">Notifikasi otomatis saat: device baru diaktivasi, ada percobaan pakai key dari device lain, validasi key revoked/expired, dan aksi admin penting.<br>
+        1. Buat bot via <span class="mono">@BotFather</span> → salin token.<br>
+        2. Ambil chat ID via <span class="mono">@userinfobot</span> (atau tambahkan bot ke grup, chat ID negatif).<br>
+        3. Kirim <span class="mono">/start</span> ke bot Anda sekali agar bot bisa mengirim pesan.</p>
+        <div class="tg-state"><span class="live-dot" id="tgDot"></span><span id="tgState">memuat…</span></div>
+        <label for="sTgToken">BOT TOKEN</label>
+        <input type="text" id="sTgToken" placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ" autocomplete="off">
+        <label for="sTgChat">CHAT ID</label>
+        <input type="text" id="sTgChat" placeholder="mis. 123456789 atau -1001234567890" autocomplete="off">
+        <label style="display:flex;align-items:center;gap:8px;margin-top:12px;text-transform:none;letter-spacing:0;font-size:12px;color:var(--text)">
+          <input type="checkbox" id="sTgEnabled" style="width:auto;accent-color:var(--amber)"> Aktifkan notifikasi
+        </label>
+        <div class="set-row">
+          <button class="btn primary" id="btnSetSave">Simpan Pengaturan</button>
+          <button class="btn" id="btnTgTest">Kirim Tes</button>
+        </div>
+      </div>
+      <div class="set-box">
+        <h3>Ganti Password Admin</h3>
+        <p class="hint">Password baru tersimpan ter-hash (PBKDF2) di database. Setelah diganti, <b>semua sesi login lain otomatis keluar</b> dan password lama tidak berlaku lagi.</p>
+        <label for="sPwCur">PASSWORD SAAT INI</label>
+        <input type="password" id="sPwCur" autocomplete="current-password">
+        <label for="sPwNew">PASSWORD BARU (MIN. 8 KARAKTER)</label>
+        <input type="password" id="sPwNew" autocomplete="new-password">
+        <label for="sPwConf">ULANGI PASSWORD BARU</label>
+        <input type="password" id="sPwConf" autocomplete="new-password">
+        <div class="set-row">
+          <button class="btn primary" id="btnPwSave">Ganti Password</button>
+        </div>
+      </div>
+    </div>
   </div>
 </main>
 
 <footer>
   <div class="fwrap">
-    <span>7σ Seven Sigma · <b>1 Device = 1 Key</b> · Cloudflare Workers + D1</span>
+    <span>7σ Seven Sigma · <b>1 Device = 1 Key</b> · Cloudflare Workers + D1 · <a href="/check" target="_blank" rel="noopener">Halaman Cek Key Customer</a></span>
     <span>API: <span class="mono" id="apiUrl">-</span></span>
   </div>
 </footer>
@@ -309,7 +394,7 @@ canvas#pfChart{width:100%;height:260px;display:block}
   <div class="pf-wrap">
     <div class="pf-top">
       <div>
-        <div class="pf-name">7σ Seven Sigma 4.5 <span style="color:var(--dim);font-weight:400">&middot; MT5 Portfolio</span></div>
+        <div class="pf-name">7σ Seven Sigma 4.6 <span style="color:var(--dim);font-weight:400">&middot; MT5 Portfolio</span></div>
         <div class="pf-sub" id="pfSub">&mdash;</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
@@ -322,6 +407,33 @@ canvas#pfChart{width:100%;height:260px;display:block}
 </div>
 
 <div id="toasts"></div>
+
+<!-- ================= MODAL EDIT KEY ================= -->
+<div class="modal-bg hidden" id="editModal">
+  <div class="modal">
+    <div class="mhead"><b id="editTitle">Edit Key</b><button class="btn sm ghost" id="editClose">✕</button></div>
+    <div class="mbody">
+      <input type="hidden" id="eId">
+      <label class="form-lab" for="eLabel">LABEL / CATATAN</label>
+      <input type="text" id="eLabel" maxlength="120">
+      <div id="eUnactivatedBox">
+        <label class="form-lab" for="eDur">DURASI BAWAAN — HARI (KEY BELUM AKTIF; 0 = LIFETIME)</label>
+        <input type="number" id="eDur" min="0" max="3650">
+      </div>
+      <div id="eActivatedBox">
+        <p class="hint" style="color:var(--dim);font-size:11.5px;margin-top:10px">Key sudah <b>aktif</b> — ubah masa berlaku lewat perpanjangan (dihitung dari tanggal kadaluarsa / hari ini bila sudah lewat).</p>
+        <label class="form-lab" for="eExt">PERPANJANG (HARI)</label>
+        <input type="number" id="eExt" min="0" max="3650" value="0">
+        <p class="mut" id="eExtInfo" style="margin-top:4px"></p>
+      </div>
+      <label class="form-lab" for="eDev">MAKS DEVICE</label>
+      <input type="number" id="eDev" min="1" max="10">
+      <div class="set-row">
+        <button class="btn primary" id="btnEditSave">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
 /* ============================================================
    Seven Sigma — Dashboard admin (vanilla JS, tanpa build)
@@ -402,7 +514,7 @@ $('loginForm').onsubmit = async (e) => {
     if (status === 200 && data.ok) {
       TOKEN = data.token; localStorage.setItem('qqx_token', TOKEN);
       $('warnDefault').classList.toggle('hidden', !data.warn_default_password);
-      showApp(true); refreshAll(); toast('Selamat datang, admin!');
+      showApp(true); refreshAll(); loadSettings(); toast('Selamat datang, admin!');
       if ($('autoRefresh').checked && !FEED_TIMER) FEED_TIMER = setInterval(refreshAll, 30000);
     } else {
       $('loginErr').style.display = 'block';
@@ -451,11 +563,14 @@ function renderDevices() {
   const money = (v) => (v === null || v === undefined || v === '') ? '—' : Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const signed = (v) => (Number(v) > 0 ? '+' : '') + money(v);
   const col = (v) => (Number(v) > 0 ? '#4ade80' : (Number(v) < 0 ? '#f87171' : 'inherit'));
+  // Status koneksi EA: live < 15 mnt (stats push v4.6), idle < 24 jam, offline sisanya
+  const liveCls = (ls) => { const s = Math.floor(Date.now() / 1000) - (ls || 0); if (s <= 900) return 'on'; if (s <= 86400) return 'idle'; return 'off'; };
+  const liveTxt = (ls) => liveCls(ls) === 'on' ? 'LIVE' : (liveCls(ls) === 'idle' ? 'IDLE' : 'OFFLINE');
   $('devBody').innerHTML = rows.map(({ k, d }) => {
+    const hasStat = !!d.stats_at;
     const bal = Number(d.balance || 0), eq = Number(d.equity || 0);
     const wl = (Number(d.wins) || 0) + (Number(d.losses) || 0);
     const wr = wl ? Math.round((Number(d.wins) || 0) / wl * 100) + '%' : '—';
-    const hasStat = d.stats_at || d.balance || d.wins || d.losses;
     return `<tr>
     <td><code class="mono" onclick="copyText('${k.key}')" style="cursor:pointer" title="Klik untuk salin">${k.key}</code></td>
     <td><b class="mono">${esc(d.account)}</b><br><span class="mut">${esc(d.broker || '—')}</span>
@@ -465,7 +580,7 @@ function renderDevices() {
     <td>${hasStat ? '<span style="color:#4ade80">' + (Number(d.wins) || 0) + 'W</span> <span style="color:#f87171">' + (Number(d.losses) || 0) + 'L</span><br><span class="mut">winrate ' + wr + '</span>' : '<span class="mut">—</span>'}</td>
     <td class="mono" style="color:${col(d.closed_pl)}">${hasStat ? signed(d.closed_pl) : '—'}</td>
     <td>${statusBadge(k)}</td>
-    <td><div>${relTime(d.last_seen)}</div><span class="mut mono">${esc(d.last_ip || '—')}</span></td>
+    <td><div><span class="live-dot ${liveCls(d.last_seen)}"></span>${relTime(d.last_seen)} <span class="mut">· ${liveTxt(d.last_seen)}</span></div><span class="mut mono">${esc(d.last_ip || '—')}</span></td>
     <td>${k.expires_at ? utcStr(k.expires_at) + ' UTC' : 'Tanpa batas'}</td>
   </tr>`;
   }).join('');
@@ -488,6 +603,7 @@ function renderKeys() {
       <td><div>${relTime(k.last_checkin_at)}</div><span class="mut mono">${esc(k.last_ip || '')}</span></td>
       <td>${k.expires_at ? utcStr(k.expires_at) + ' UTC' : '—'}</td>
       <td><div class="acts" style="justify-content:flex-end">
+        <button class="btn sm" onclick="showEditKey(${k.id})" title="Ubah label / perpanjang masa aktif / maks device">Edit</button>
         <button class="btn sm" onclick="resetKey(${k.id})" title="Lepas ikatan device agar bisa pindah akun">Reset</button>
         <button class="btn sm ${k.status === 'revoked' ? '' : 'danger'}" onclick="toggleKey(${k.id},'${k.status === 'revoked' ? 'active' : 'revoked'}')">${k.status === 'revoked' ? 'Aktifkan' : 'Revoke'}</button>
         <button class="btn sm" onclick="showLogs(${k.id})">Riwayat</button>
@@ -512,6 +628,164 @@ async function loadFeed() {
       <span class="mut" style="white-space:nowrap">${relTime(l.created_at)}</span>
     </div>`).join('');
 }
+
+// ---------------- grafik aktivitas (SVG, tanpa dependency) ----------------
+let ACT_RANGE = 7;
+async function loadActivity(days) {
+  ACT_RANGE = days || 7;
+  $('btnAct7').classList.toggle('primary', ACT_RANGE === 7);
+  $('btnAct30').classList.toggle('primary', ACT_RANGE === 30);
+  try {
+    const { data } = await api('/api/admin/activity?days=' + ACT_RANGE);
+    if (data.ok) renderActivity(data.series || [], data.totals || {});
+  } catch (_) { /* diam */ }
+}
+function renderActivity(series, totals) {
+  const svg = $('actChart');
+  const W = Math.max(600, svg.clientWidth || 900), H = 220;
+  const padL = 34, padR = 8, padT = 12, padB = 24;
+  const iw = W - padL - padR, ih = H - padT - padB;
+  const n = series.length || 1;
+  const maxV = Math.max(4, ...series.map((b) => Math.max(b.valid, b.activate, b.blocked, b.admin)));
+  const niceMax = Math.ceil(maxV / 4) * 4;
+  const bw = iw / n;
+  const barW = Math.max(2, Math.min(16, bw / 5.2));
+  const yOf = (v) => padT + ih - (v / niceMax) * ih;
+  let s = `<rect x="0" y="0" width="${W}" height="${H}" fill="#0b0b0b"/>`;
+  // gridlines + label sumbu Y
+  for (let i = 0; i <= 4; i++) {
+    const v = niceMax * i / 4, yy = yOf(v);
+    s += `<line x1="${padL}" y1="${yy}" x2="${padL + iw}" y2="${yy}" stroke="rgba(255,255,255,.06)" stroke-width="1"/>`;
+    s += `<text x="${padL - 6}" y="${yy + 3.5}" fill="#71717a" font-size="9.5" text-anchor="end">${v}</text>`;
+  }
+  series.forEach((b, i) => {
+    const cx = padL + bw * i + bw / 2;
+    const groups = [
+      { v: b.valid, c: '#22c55e', t: 'Valid: ' + b.valid },
+      { v: b.activate, c: '#ff9900', t: 'Aktivasi: ' + b.activate },
+      { v: b.blocked, c: '#ff4444', t: 'Ditolak: ' + b.blocked },
+      { v: b.admin, c: '#c084fc', t: 'Admin: ' + b.admin },
+    ];
+    const active = groups.filter((g) => g.v > 0);
+    const slots = active.length || 1;
+    const totalW = barW * slots + 2 * (slots - 1);
+    let x = cx - totalW / 2;
+    const tip = b.day + ' — valid ' + b.valid + ' · aktivasi ' + b.activate + ' · ditolak ' + b.blocked + ' · admin ' + b.admin;
+    s += `<rect x="${padL + bw * i}" y="${padT}" width="${bw}" height="${ih}" fill="transparent"><title>${tip}</title></rect>`;
+    active.forEach((g) => {
+      const h = Math.max(g.v > 0 ? 2 : 0, (g.v / niceMax) * ih);
+      s += `<rect x="${x.toFixed(1)}" y="${(padT + ih - h).toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${g.c}" opacity="0.92"><title>${tip}</title></rect>`;
+      x += barW + 2;
+    });
+    // label X (tampilkan sebagian agar tidak bertabrakan)
+    const step = Math.ceil(n / (W > 800 ? 10 : 6));
+    if (i % step === 0 || i === n - 1) {
+      const md = b.day.slice(5).replace('-', '/');
+      s += `<text x="${cx.toFixed(1)}" y="${H - 8}" fill="#71717a" font-size="9.5" text-anchor="middle">${md}</text>`;
+    }
+  });
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  svg.innerHTML = s;
+  $('actTotals').innerHTML =
+    `<span>Total ${ACT_RANGE} hari — Valid: <b>${totals.valid || 0}</b></span>` +
+    `<span>Aktivasi: <b style="color:var(--amber2)">${totals.activate || 0}</b></span>` +
+    `<span>Ditolak: <b style="color:#ff7676">${totals.blocked || 0}</b></span>` +
+    `<span>Aksi admin: <b style="color:#c084fc">${totals.admin || 0}</b></span>`;
+}
+window.loadActivity = loadActivity;
+
+// ---------------- edit / perpanjang key ----------------
+function showEditKey(id) {
+  const k = KEYS_CACHE.find((x) => x.id === id);
+  if (!k) { toast('Key tidak ditemukan', true); return; }
+  $('editTitle').textContent = 'Edit Key · ' + k.key;
+  $('eId').value = k.id;
+  $('eLabel').value = k.label || '';
+  $('eDev').value = k.max_devices || 1;
+  const bound = !!k.is_bound;
+  $('eUnactivatedBox').style.display = bound ? 'none' : 'block';
+  $('eActivatedBox').style.display = bound ? 'block' : 'none';
+  $('eDur').value = (k.duration_days === null || k.duration_days === undefined) ? 30 : k.duration_days;
+  $('eExt').value = 0;
+  $('eExtInfo').textContent = k.expires_at
+    ? ('Berlaku sampai: ' + utcStr(k.expires_at) + ' UTC' + (k.is_expired ? ' (SUDAH KADALUARSA — perpanjangan dihitung dari hari ini)' : ''))
+    : 'Berlaku: tanpa batas (lifetime)';
+  $('editModal').classList.remove('hidden');
+}
+window.showEditKey = showEditKey;
+$('editClose').onclick = () => $('editModal').classList.add('hidden');
+$('editModal').onclick = (e) => { if (e.target === $('editModal')) $('editModal').classList.add('hidden'); };
+$('btnEditSave').onclick = async () => {
+  const id = $('eId').value;
+  const body = { label: $('eLabel').value, max_devices: +$('eDev').value };
+  const bound = $('eUnactivatedBox').style.display === 'none';
+  if (bound) body.extend_days = Math.max(0, +$('eExt').value || 0);
+  else body.duration_days = Math.max(0, +$('eDur').value || 0);
+  $('btnEditSave').disabled = true;
+  try {
+    const { data } = await api('/api/admin/keys/' + id + '/update', { method: 'POST', body: JSON.stringify(body) });
+    if (data.ok) {
+      toast(data.message || 'Key diperbarui');
+      $('editModal').classList.add('hidden');
+      loadKeys(); loadFeed();
+    } else toast(data.message || 'Gagal menyimpan', true);
+  } catch (_) { toast('Gagal terhubung ke server', true); }
+  $('btnEditSave').disabled = false;
+};
+
+// ---------------- pengaturan: telegram + password ----------------
+async function loadSettings() {
+  try {
+    const { data } = await api('/api/admin/settings');
+    if (!data.ok) return;
+    $('sTgToken').placeholder = data.tg_has_token
+      ? ('tersimpan: ' + data.tg_bot_token_masked + ' (kosongkan = hapus)')
+      : '123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ';
+    $('sTgToken').value = '';
+    $('sTgChat').value = data.tg_chat_id || '';
+    $('sTgEnabled').checked = !!data.tg_enabled;
+    const on = !!data.tg_enabled;
+    $('tgDot').className = 'live-dot ' + (on ? 'on' : 'off');
+    $('tgState').textContent = on ? 'Notifikasi AKTIF' : 'Notifikasi nonaktif';
+  } catch (_) { /* diam */ }
+}
+$('btnSetSave').onclick = async () => {
+  $('btnSetSave').disabled = true;
+  try {
+    const body = { tg_chat_id: $('sTgChat').value.trim(), tg_enabled: $('sTgEnabled').checked };
+    const tok = $('sTgToken').value.trim();
+    if (tok) body.tg_bot_token = tok;
+    const { data } = await api('/api/admin/settings', { method: 'POST', body: JSON.stringify(body) });
+    if (data.ok) { toast(data.message || 'Tersimpan'); loadSettings(); }
+    else toast(data.message || 'Gagal menyimpan', true);
+  } catch (_) { toast('Gagal terhubung ke server', true); }
+  $('btnSetSave').disabled = false;
+};
+$('btnTgTest').onclick = async () => {
+  $('btnTgTest').disabled = true; $('btnTgTest').textContent = 'Mengirim…';
+  try {
+    const { data } = await api('/api/admin/telegram/test', { method: 'POST' });
+    if (data.ok) toast('Tes terkirim — cek Telegram Anda');
+    else toast(data.error || 'Gagal mengirim tes', true);
+    loadSettings();
+  } catch (_) { toast('Gagal terhubung ke server', true); }
+  $('btnTgTest').disabled = false; $('btnTgTest').textContent = 'Kirim Tes';
+};
+$('btnPwSave').onclick = async () => {
+  if (!confirm('Ganti password admin? Semua sesi login lain akan otomatis keluar.')) return;
+  $('btnPwSave').disabled = true;
+  try {
+    const { data } = await api('/api/admin/password', { method: 'POST', body: JSON.stringify({
+      current_password: $('sPwCur').value, new_password: $('sPwNew').value, confirm_password: $('sPwConf').value }) });
+    if (data.ok) {
+      toast(data.message || 'Password diganti. Silakan login ulang.');
+      $('sPwCur').value = ''; $('sPwNew').value = ''; $('sPwConf').value = '';
+      setTimeout(() => doLogout(false), 800);
+    } else toast(data.message || 'Gagal mengganti password', true);
+  } catch (_) { toast('Gagal terhubung ke server', true); }
+  $('btnPwSave').disabled = false;
+};
 
 // ---------------- portfolio ala MQL5 signal ----------------
 function pfNum(v, d) { return Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: d === undefined ? 2 : d, maximumFractionDigits: d === undefined ? 2 : d }); }
@@ -813,7 +1087,12 @@ $('logModal').onclick = (e) => { if (e.target === $('logModal')) $('logModal').c
 $('search').oninput = renderKeys;
 $('btnReload').onclick = () => { refreshAll(); toast('Data dimuat ulang'); };
 
-function refreshAll() { loadStats().catch(() => { $('srvDot').classList.add('off'); }); loadKeys().catch(() => {}); loadFeed().catch(() => {}); }
+function refreshAll() {
+  loadStats().catch(() => { $('srvDot').classList.add('off'); });
+  loadKeys().catch(() => {});
+  loadFeed().catch(() => {});
+  loadActivity(ACT_RANGE);
+}
 
 $('autoRefresh').onchange = () => {
   if (FEED_TIMER) { clearInterval(FEED_TIMER); FEED_TIMER = null; }
@@ -835,13 +1114,13 @@ if (TOKEN) {
   api('/api/admin/stats').then(({ status, data }) => {
     if (status === 200 && data.ok) {
       $('warnDefault').classList.toggle('hidden', !data.warn_default_password);
-      showApp(true); refreshAll();
+      showApp(true); refreshAll(); loadSettings();
       if ($('autoRefresh').checked) FEED_TIMER = setInterval(refreshAll, 30000);
     } else doLogout(true);
   }).catch(() => showApp(false));
 } else showApp(false);
 // ---------------- panel chrome: minimize / maximize (terminal) ----------------
-const PANEL_TITLES = ['Generate License Key', 'Daftar License Key', 'EA Terhubung', 'Aktivitas Terbaru'];
+const PANEL_TITLES = ['Grafik Aktivitas', 'Generate License Key', 'Daftar License Key', 'EA Terhubung', 'Aktivitas Terbaru', 'Pengaturan'];
 function initPanels() {
   const cards = [...document.querySelectorAll('#appWrap > .card')];
   cards.forEach((card, i) => {

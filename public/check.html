@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cek License Key — Seven Sigma</title>
+<style>
+:root{
+  --bg:#050505; --card:#0d0d0d; --card2:#141414; --line:#262626;
+  --text:#e6e6e6; --muted:#969696; --dim:#5e5e5e;
+  --amber:#ff9900; --amber2:#ffb000; --emerald:#22c55e; --rose:#ff4444;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font:13px/1.5 ui-monospace,'Cascadia Mono','SF Mono',Menlo,Consolas,'Liberation Mono',monospace;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+a{color:var(--amber2)}
+header{background:#0a0a0a;border-bottom:2px solid var(--amber)}
+.hwrap{max-width:760px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:1.8px;color:#fff}
+.crown{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:2px solid var(--amber);color:var(--amber);font-weight:800;font-size:13px}
+main{flex:1;width:100%;max-width:760px;margin:0 auto;padding:38px 20px}
+.card{background:var(--card);border:1px solid var(--line);border-top:2px solid var(--amber);padding:26px}
+h1{font-size:19px;margin-bottom:6px;text-transform:uppercase;letter-spacing:1.2px}
+.sub{color:var(--muted);font-size:12.5px;margin-bottom:18px;line-height:1.6}
+label{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:6px}
+input[type=text]{width:100%;background:#101010;border:1px solid var(--line);color:var(--text);padding:11px 12px;font:inherit;font-size:15px;letter-spacing:1.5px;text-transform:uppercase;border-radius:0}
+input[type=text]:focus{outline:none;border-color:var(--amber)}
+input[type=text]::placeholder{color:#4a4a4a;letter-spacing:1px;text-transform:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--card2);border:1px solid var(--line);color:var(--text);font:inherit;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:10px 16px;cursor:pointer;border-radius:0}
+.btn:hover{border-color:var(--amber);color:var(--amber2)}
+.btn.primary{background:var(--amber);border-color:var(--amber);color:#000}
+.btn.primary:hover{background:var(--amber2)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+#btnCheck{width:100%;margin-top:16px;padding:13px}
+.res{margin-top:20px;border:1px solid var(--line);background:#101010;padding:18px;display:none}
+.res.show{display:block}
+.res .rtitle{font-size:14px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:9px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;font-size:12.5px;margin-top:6px}
+.kv .k{color:var(--muted)}
+.kv .v{text-align:right;font-variant-numeric:tabular-nums;word-break:break-all}
+.ok{color:#4ade80}.bad{color:#ff7676}.warn{color:var(--amber2)}
+.err{color:#ff7676;font-size:12.5px;margin-top:12px;display:none}
+.note{color:var(--dim);font-size:11px;margin-top:16px;line-height:1.7}
+footer{border-top:1px solid var(--line);background:#0a0a0a}
+.fwrap{max-width:760px;margin:0 auto;padding:12px 20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;color:var(--dim);font-size:10.5px;letter-spacing:.8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="logo"><div class="crown">7&sigma;</div><span>Seven Sigma <span style="color:var(--dim);font-weight:400">&middot; Cek License Key</span></span></div>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <h1>Cek Status License Key</h1>
+    <p class="sub">Masukkan license key Anda untuk melihat status, masa aktif, dan penggunaan device.<br>Format key: <b>XXXXX-XXXXX-XXXXX-XXXXX</b> (tanpa spasi).</p>
+    <form id="f">
+      <label for="key">LICENSE KEY</label>
+      <input type="text" id="key" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" autocomplete="off" maxlength="24" required>
+      <button class="btn primary" type="submit" id="btnCheck">Periksa Key</button>
+    </form>
+    <div class="err" id="err"></div>
+    <div class="res" id="res"></div>
+    <p class="note">Data yang ditampilkan bersifat ringkas dan aman: status lisensi, tanggal kadaluarsa, dan jumlah device terpakai. Nomor akun trading tidak ditampilkan di halaman publik. Jika key Anda bermasalah, hubungi support/admin.</p>
+  </div>
+</main>
+
+<footer>
+  <div class="fwrap">
+    <span>7&sigma; SEVEN SIGMA &middot; 1 DEVICE = 1 KEY</span>
+    <span>CLOUDFLARE WORKERS + D1</span>
+  </div>
+</footer>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+$('key').addEventListener('input', () => {
+  const el = $('key');
+  const pos = el.selectionStart;
+  el.value = el.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+  try { el.setSelectionRange(pos, pos); } catch (_) {}
+});
+$('f').onsubmit = async (e) => {
+  e.preventDefault();
+  const key = $('key').value.trim();
+  $('err').style.display = 'none';
+  $('res').classList.remove('show');
+  if (!key) return;
+  $('btnCheck').disabled = true; $('btnCheck').textContent = 'Memeriksa…';
+  try {
+    const r = await fetch('/api/v1/check', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ key }),
+    });
+    const d = await r.json();
+    if (!r.ok || !d.ok) {
+      $('err').textContent = d.message || 'Terjadi kesalahan. Coba lagi nanti.';
+      $('err').style.display = 'block';
+    } else if (!d.found) {
+      show(['bad', '#ff4444', 'Key TIDAK DITEMUKAN'],
+        [['Key', key], ['Pesan', d.message || 'Periksa kembali penulisan key Anda.']]);
+    } else if (d.status === 'active') {
+      const rows = [
+        ['Status', '<span class="ok">AKTIF</span>'],
+        ['Tipe', d.lifetime ? 'Lifetime (tanpa batas waktu)' : 'Berbatas waktu'],
+        ['Masa aktif', d.lifetime ? '—' : fmtStr(d.expires_at_str)],
+        ['Sisa waktu', d.lifetime ? '—' : (d.days_left > 0 ? d.days_left + ' hari' : '< 1 hari')],
+        ['Device terpakai', d.devices_used + ' dari ' + d.max_devices],
+        ['Diaktifkan', d.activated ? fmtStr(d.activated_at_str) : 'Belum pernah aktivasi'],
+      ];
+      show(['ok', '#22c55e', 'Key VALID & AKTIF'], rows);
+    } else if (d.status === 'expired') {
+      show(['warn', '#ffb000', 'Key KADALUARSA'],
+        [['Key', key], ['Berlaku sampai', fmtStr(d.expires_at_str)],
+         ['Keterangan', 'Masa aktif key telah berakhir. Hubungi admin untuk perpanjangan.']]);
+    } else {
+      show(['bad', '#ff4444', 'Key DINONAKTIFKAN'],
+        [['Key', key], ['Keterangan', 'Key telah dinonaktifkan oleh admin. Hubungi support.']]);
+    }
+  } catch (_) {
+    $('err').textContent = 'Tidak dapat menghubungi server. Periksa koneksi internet Anda.';
+    $('err').style.display = 'block';
+  }
+  $('btnCheck').disabled = false; $('btnCheck').textContent = 'Periksa Key';
+};
+// API mengirim tanggal dalam bentuk string (expires_at_str / activated_at_str).
+function fmtStr(s) { return s || '—'; }
+function show(head, rows) {
+  const [cls, color, title] = head;
+  let h = '<div class="rtitle"><span class="dot" style="background:' + color + '"></span>' + title + '</div><div class="kv">';
+  rows.forEach(([k, v]) => { h += '<div class="k">' + k + '</div><div class="v">' + v + '</div>'; });
+  $('res').innerHTML = h + '</div>';
+  $('res').classList.add('show');
+}
+</script>
+</body>
+</html>

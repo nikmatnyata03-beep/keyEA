@@ -51,6 +51,23 @@ CREATE TABLE IF NOT EXISTS checkin_logs (
   created_at INTEGER NOT NULL
 );
 
+-- Key-value store konfigurasi runtime (dikelola dari dashboard admin):
+--   admin_pw_hash  : hash PBKDF2 password admin (hasil "Ganti Password" dashboard)
+--   tg_bot_token   : token bot Telegram utk notifikasi
+--   tg_chat_id     : chat ID tujuan notifikasi
+--   tg_enabled     : '1' aktif / '0' mati
+CREATE TABLE IF NOT EXISTS settings (
+  k TEXT PRIMARY KEY,
+  v TEXT NOT NULL
+);
+
+-- Rate-limit sederhana utk halaman cek key publik (1 baris per IP, window per jam)
+CREATE TABLE IF NOT EXISTS check_rate (
+  ip           TEXT PRIMARY KEY,
+  window_start INTEGER NOT NULL,
+  n            INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE INDEX IF NOT EXISTS idx_devices_key  ON devices(key_id);
 CREATE INDEX IF NOT EXISTS idx_logs_key     ON checkin_logs(key_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_logs_time    ON checkin_logs(created_at DESC);

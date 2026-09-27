@@ -3,8 +3,9 @@
 // Cloudflare Worker (zero-dependency) : API lisensi + dashboard assets
 // ------------------------------------------------------------
 // Routing:
-//   /api/v1/*   -> endpoint EA  (src/api.js)
+//   /api/v1/*   -> endpoint EA + cek key publik (src/api.js)
 //   /api/admin/*-> endpoint admin dashboard (src/admin.js)
+//   /check      -> halaman cek key publik (public/check.html)
 //   lainnya     -> static assets ./public (dashboard)
 // ============================================================
 
@@ -13,7 +14,7 @@ import { handleApi } from './api.js';
 import { handleAdmin } from './admin.js';
 
 const worker = {
-  async fetch(request, env, _ctx) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname;
 
@@ -21,7 +22,7 @@ const worker = {
 
     if (path.startsWith('/api/v1/')) {
       try {
-        return await handleApi(request, env, path);
+        return await handleApi(request, env, path, ctx);
       } catch (e) {
         return json({ ok: false, error: 'SERVER_ERROR', message: String(e && e.message || e) }, 500);
       }
@@ -29,10 +30,16 @@ const worker = {
 
     if (path.startsWith('/api/admin/')) {
       try {
-        return await handleAdmin(request, env, path, url);
+        return await handleAdmin(request, env, path, url, ctx);
       } catch (e) {
         return json({ ok: false, error: 'SERVER_ERROR', message: String(e && e.message || e) }, 500);
       }
+    }
+
+    // Halaman cek key publik: /check -> check.html
+    if (path === '/check' || path === '/check/') {
+      const target = new URL('/check.html', url.origin);
+      if (env.ASSETS) return env.ASSETS.fetch(new Request(target.toString()));
     }
 
     // Non-API: serahkan ke Workers Assets (dashboard).
