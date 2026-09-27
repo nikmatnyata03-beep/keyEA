@@ -41,7 +41,7 @@ async function handleValidate(request, env) {
     ? body.stats : null;
   const res = await coreValidate(env.DB, {
     key: body.key || body.license_key || '',
-    account: body.account !== undefined ? String(body.account) : '',
+    account: (body.account === undefined || body.account === null) ? '' : String(body.account),
     broker: body.broker || '',
     stats,
   }, ip);

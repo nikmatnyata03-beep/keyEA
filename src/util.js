@@ -57,7 +57,10 @@ export async function readJson(request) {
   try {
     const text = await request.text();
     if (!text) return {};
-    return JSON.parse(text);
+    const parsed = JSON.parse(text);
+    // Body harus objek; null / angka / string / array ditolak diam-diam -> {}.
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+    return parsed;
   } catch (_e) {
     return {};
   }

@@ -12,7 +12,7 @@
 // ============================================================
 
 import { json, now, fmtTime, clientIp, readJson, fail } from './util.js';
-import { issueToken, verifyToken, adminPasswordIsDefault } from './auth.js';
+import { issueToken, verifyToken, adminPasswordIsDefault, verifyPassword } from './auth.js';
 import { generateKey } from './keys.js';
 import { log } from './license.js';
 
@@ -24,7 +24,7 @@ async function guard(request, env) {
 async function login(request, env) {
   const body = await readJson(request);
   const password = String(body.password || '');
-  if (!password || password !== (env.ADMIN_PASSWORD || 'quantum-queen-admin')) {
+  if (!password || !(await verifyPassword(env, password))) {
     return fail('WRONG_PASSWORD', 'Password admin salah.', 401);
   }
   const t = await issueToken(env);
@@ -102,16 +102,21 @@ async function createKeys(request, env) {
   const created = [];
   for (let i = 0; i < quantity; i++) {
     let key = generateKey();
-    // hindari tabrakan sangat kecil kemungkinannya
-    for (let attempt = 0; attempt < 5; attempt++) {
+    // Cek duplikat lalu insert; UNIQUE race (request admin simultan) ->
+    // regenerasi key, maksimal 5 percobaan.
+    let inserted = false;
+    for (let attempt = 0; attempt < 5 && !inserted; attempt++) {
       const dup = await env.DB.prepare('SELECT id FROM license_keys WHERE key_norm = ?')
         .bind(key.replace(/-/g, '')).first();
-      if (!dup) break;
-      key = generateKey();
+      if (dup) { key = generateKey(); continue; }
+      try {
+        await env.DB.prepare(
+          'INSERT INTO license_keys (key, key_norm, label, status, duration_days, max_devices, created_at) VALUES (?,?,?,?,?,?,?)'
+        ).bind(key, key.replace(/-/g, ''), label, 'active', duration, maxDevices, ts).run();
+        inserted = true;
+      } catch (_e) { key = generateKey(); }
     }
-    await env.DB.prepare(
-      'INSERT INTO license_keys (key, key_norm, label, status, duration_days, max_devices, created_at) VALUES (?,?,?,?,?,?,?)'
-    ).bind(key, key.replace(/-/g, ''), label, 'active', duration, maxDevices, ts).run();
+    if (!inserted) continue;
     created.push(key);
   }
   await log(env.DB, null, created[0] || '', '', '', '', 'ADMIN_CREATE',
@@ -141,9 +146,13 @@ async function resetKey(env, id) {
 }
 
 async function deleteKey(env, id) {
+  const row = await env.DB.prepare('SELECT key FROM license_keys WHERE id = ?').bind(id).first();
   await env.DB.prepare('DELETE FROM checkin_logs WHERE key_id = ?').bind(id).run();
   await env.DB.prepare('DELETE FROM devices WHERE key_id = ?').bind(id).run();
-  await env.DB.prepare('DELETE FROM license_keys WHERE id = ?').bind(id).run();
+  const r = await env.DB.prepare('DELETE FROM license_keys WHERE id = ?').bind(id).run();
+  if (!r.meta || r.meta.changes === 0) return fail('NOT_FOUND', 'Key tidak ditemukan.', 404);
+  await log(env.DB, null, row ? row.key : '', '', '', '', 'ADMIN_DELETE',
+    'Key dihapus permanen beserta device & riwayatnya');
   return json({ ok: true });
 }
 
@@ -175,23 +184,25 @@ export async function handleAdmin(request, env, path, url) {
   if (!authed) return fail('UNAUTHORIZED', 'Token tidak valid / kadaluarsa. Login ulang.', 401);
 
   const seg = path.split('/').filter(Boolean); // ['api','admin',...]
+  const id = seg[3] !== undefined ? parseInt(seg[3], 10) : NaN;
+  const idOk = Number.isInteger(id) && id > 0;
 
   if (path === '/api/admin/stats' && request.method === 'GET') return stats(env);
   if (path === '/api/admin/keys' && request.method === 'GET') return listKeys(env);
   if (path === '/api/admin/keys' && request.method === 'POST') return createKeys(request, env);
   if (path === '/api/admin/logs' && request.method === 'GET') return allLogs(request, env, url);
 
-  if (seg[2] === 'keys' && seg[3] && seg[4] === undefined && request.method === 'DELETE') {
-    return deleteKey(env, parseInt(seg[3], 10));
+  if (seg[2] === 'keys' && idOk && seg[4] === undefined && request.method === 'DELETE') {
+    return deleteKey(env, id);
   }
-  if (seg[2] === 'keys' && seg[3] && seg[4] === 'toggle' && request.method === 'POST') {
-    return toggleKey(request, env, parseInt(seg[3], 10));
+  if (seg[2] === 'keys' && idOk && seg[4] === 'toggle' && request.method === 'POST') {
+    return toggleKey(request, env, id);
   }
-  if (seg[2] === 'keys' && seg[3] && seg[4] === 'reset' && request.method === 'POST') {
-    return resetKey(env, parseInt(seg[3], 10));
+  if (seg[2] === 'keys' && idOk && seg[4] === 'reset' && request.method === 'POST') {
+    return resetKey(env, id);
   }
-  if (seg[2] === 'keys' && seg[3] && seg[4] === 'logs' && request.method === 'GET') {
-    return keyLogs(request, env, parseInt(seg[3], 10), url);
+  if (seg[2] === 'keys' && idOk && seg[4] === 'logs' && request.method === 'GET') {
+    return keyLogs(request, env, id, url);
   }
 
   return json({ ok: false, error: 'NOT_FOUND', message: 'Endpoint admin tidak ditemukan.' }, 404);

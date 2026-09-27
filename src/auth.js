@@ -28,6 +28,16 @@ export function adminPasswordIsDefault(env) {
   return !env.ADMIN_PASSWORD;
 }
 
+// Verifikasi password dengan perbandingan constant-time (anti timing attack):
+// kedua sisi di-HMAC lalu dibandingkan via safeEqual sehingga isi password
+// tidak bocor dari durasi perbandingan.
+export async function verifyPassword(env, password) {
+  const expected = env.ADMIN_PASSWORD || 'quantum-queen-admin';
+  const a = await hmacHex('pw-cmp', String(password || ''));
+  const b = await hmacHex('pw-cmp', expected);
+  return safeEqual(a, b);
+}
+
 const TOKEN_TTL = 24 * 3600; // 24 jam
 
 export async function issueToken(env) {

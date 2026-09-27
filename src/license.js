@@ -86,32 +86,41 @@ export async function coreValidate(db, p, ip) {
         message: 'Key sudah terikat pada ' + ownerInfo + '. Minta admin reset device untuk pindah akun.' };
     }
 
-    // Slot tersedia -> bind sekarang (aktivasi pertama / setelah reset)
+    // Slot tersedia -> bind ATOMIK: cek slot + insert dalam satu statement
+    // (mencegah dua validate simultan melewati max_devices).
+    let bindRes;
     if (statsFull) {
-      await db.prepare(
-        'INSERT INTO devices (key_id, account, broker, first_seen, last_seen, last_ip, balance, equity, float_pl, wins, losses, closed_pl, stats_at, stats_full) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
-      ).bind(row.id, account, broker, ts, ts, ip, st ? st.balance : 0, st ? st.equity : 0, st ? st.float_pl : 0, st ? st.wins : 0, st ? st.losses : 0, st ? st.closed_pl : 0, ts, statsFull).run();
+      bindRes = await db.prepare(
+        'INSERT INTO devices (key_id, account, broker, first_seen, last_seen, last_ip, balance, equity, float_pl, wins, losses, closed_pl, stats_at, stats_full) SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM devices WHERE key_id = ?) < ?'
+      ).bind(row.id, account, broker, ts, ts, ip,
+        st ? st.balance : 0, st ? st.equity : 0, st ? st.float_pl : 0,
+        st ? st.wins : 0, st ? st.losses : 0, st ? st.closed_pl : 0, ts, statsFull,
+        row.id, row.max_devices).run();
     } else if (st) {
-      await db.prepare(
-        'INSERT INTO devices (key_id, account, broker, first_seen, last_seen, last_ip, balance, equity, float_pl, wins, losses, closed_pl, stats_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)'
-      ).bind(row.id, account, broker, ts, ts, ip, st.balance, st.equity, st.float_pl, st.wins, st.losses, st.closed_pl, ts).run();
+      bindRes = await db.prepare(
+        'INSERT INTO devices (key_id, account, broker, first_seen, last_seen, last_ip, balance, equity, float_pl, wins, losses, closed_pl, stats_at) SELECT ?,?,?,?,?,?,?,?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM devices WHERE key_id = ?) < ?'
+      ).bind(row.id, account, broker, ts, ts, ip,
+        st.balance, st.equity, st.float_pl, st.wins, st.losses, st.closed_pl, ts,
+        row.id, row.max_devices).run();
     } else {
-      await db.prepare(
-        'INSERT INTO devices (key_id, account, broker, first_seen, last_seen, last_ip) VALUES (?,?,?,?,?,?)'
-      ).bind(row.id, account, broker, ts, ts, ip).run();
+      bindRes = await db.prepare(
+        'INSERT INTO devices (key_id, account, broker, first_seen, last_seen, last_ip) SELECT ?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM devices WHERE key_id = ?) < ?'
+      ).bind(row.id, account, broker, ts, ts, ip, row.id, row.max_devices).run();
+    }
+    const inserted = bindRes && bindRes.meta ? (bindRes.meta.changes || 0) : 0;
+    if (!inserted) {
+      // Kalah race: slot baru saja terisi request lain.
+      await log(db, row.id, row.key, account, broker, ip, 'DEVICE_LIMIT',
+        'Ditolak: slot device penuh (race)');
+      return { valid: false, error: 'DEVICE_LIMIT', event: 'DEVICE_LIMIT', row,
+        message: 'Key sudah terikat pada device lain. Minta admin reset device untuk pindah akun.' };
     }
 
-    if (!row.activated_at) {
-      const dur = (row.duration_days === null || row.duration_days === undefined) ? 30 : row.duration_days;
-      const expires = ts + dur * 86400;
-      await db.prepare(
-        'UPDATE license_keys SET activated_at = ?, expires_at = ? WHERE id = ?'
-      ).bind(ts, expires, row.id).run();
-      row.activated_at = ts;
-      row.expires_at = expires;
-    }
+    const freshCnt = await db.prepare('SELECT COUNT(*) AS n FROM devices WHERE key_id = ?')
+      .bind(row.id).first();
+    const slotUsed = freshCnt ? freshCnt.n : used + 1;
     await log(db, row.id, row.key, account, broker, ip, 'ACTIVATE',
-      'Device baru terikat (slot ' + (used + 1) + '/' + row.max_devices + ')');
+      'Device baru terikat (slot ' + slotUsed + '/' + row.max_devices + ')');
   } else {
     if (statsFull) {
       await db.prepare(
@@ -128,6 +137,20 @@ export async function coreValidate(db, p, ip) {
     }
   }
 
+  // Aktivasi idempoten: diulang tiap validate bila belum tersimpan, sehingga
+  // kegagalan sebagian (device terikat tapi expiry kosong) pulih sendiri.
+  // duration_days = 0 berarti LIFETIME: activated_at terisi, expires_at NULL
+  // (dashboard menampilkan "Tanpa batas", cek kadaluarsa melewati NULL).
+  if (!row.activated_at) {
+    const dur = (row.duration_days === null || row.duration_days === undefined) ? 30 : row.duration_days;
+    const expires = dur > 0 ? ts + dur * 86400 : null;
+    await db.prepare(
+      'UPDATE license_keys SET activated_at = ?, expires_at = ? WHERE id = ?'
+    ).bind(ts, expires, row.id).run();
+    row.activated_at = ts;
+    row.expires_at = expires;
+  }
+
   // --- Sukses -----------------------------------------------------------------
   await db.prepare(
     'UPDATE license_keys SET last_checkin_at = ?, last_account = ?, last_broker = ?, last_ip = ? WHERE id = ?'
@@ -138,7 +161,9 @@ export async function coreValidate(db, p, ip) {
   const fresh = await db.prepare('SELECT * FROM license_keys WHERE id = ?')
     .bind(row.id).first();
   return { valid: true, event: 'VALID', row: fresh,
-    message: 'License valid sampai ' + fmtTime(fresh.expires_at) + ' UTC.' };
+    message: fresh.expires_at
+      ? 'License valid sampai ' + fmtTime(fresh.expires_at) + ' UTC.'
+      : 'License valid tanpa batas waktu (lifetime).' };
 }
 
 export async function log(db, keyId, keyText, account, broker, ip, event, detail) {
