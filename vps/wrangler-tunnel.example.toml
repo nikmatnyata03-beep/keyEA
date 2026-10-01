@@ -1,0 +1,7 @@
+name = "vps-tunnel"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+account_id = "27f9d19e916a7ab071db7b2ad8f05b94"
+
+[vars]
+TUNNEL_TOKEN = "GANTI_DENGAN_TOKEN_RAHASIA"
